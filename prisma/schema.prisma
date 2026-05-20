@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingStatus {
+  PENDING
+  CONTACTED
+  CONFIRMED
+  CANCELLED
+}
+
+enum ServiceType {
+  CONTACT
+  CUSTOM_TRIP
+  OMRA
+  TICKETING
+  TRANSFER
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  announcements Announcement[]
+  createdAt     DateTime       @default(now())
+}
+
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  description String
+  price       Decimal   @db.Decimal(10, 2)
+  image       String
+  location    String
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([categoryId])
+  @@index([slug])
+}
+
+model ContactRequest {
+  id          String      @id @default(cuid())
+  fullname    String
+  email       String
+  phone       String?
+  message     String
+  serviceType ServiceType
+  createdAt   DateTime    @default(now())
+
+  @@index([serviceType])
+  @@index([createdAt])
+}
+
+model BookingRequest {
+  id            String        @id @default(cuid())
+  fullname      String
+  phone         String
+  destination   String
+  departureDate DateTime
+  endDate       DateTime?
+  adults        Int           @default(1)
+  children      Int           @default(0)
+  travelers     Int
+  notes         String?
+  serviceType   ServiceType
+  status        BookingStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+
+  @@index([status])
+  @@index([serviceType])
+  @@index([createdAt])
+}
