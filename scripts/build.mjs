@@ -18,7 +18,7 @@ if (!hasUsableValue(process.env.VERCEL_URL)) {
   process.env.VERCEL_URL = new URL(process.env.NEXTAUTH_URL).hostname;
 }
 
-execSync("npx next build", {
+execSync("npx prisma generate && npx next build", {
   env: process.env,
   stdio: "inherit",
 });
