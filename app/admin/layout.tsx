@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
@@ -14,10 +15,10 @@ export const metadata: Metadata = buildMetadata({
 });
 
 const links = [
-  { href: "/admin", label: "Dashboard" },
-  { href: "/admin/announcements", label: "Annonces" },
-  { href: "/admin/categories", label: "Categories" },
-  { href: "/admin/requests", label: "Workflow clients" },
+  { href: "/admin", label: "Accueil admin", description: "Vue rapide du jour" },
+  { href: "/admin/requests", label: "Demandes clients", description: "Reservations et messages" },
+  { href: "/admin/announcements", label: "Créer / modifier une annonce", description: "Offres visibles sur le site" },
+  { href: "/admin/categories", label: "Types d'offres", description: "Voyage, Omra, Visa..." },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -28,12 +29,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="min-h-screen bg-[#090909] pt-20">
       <div className="container-max mx-auto grid gap-4 px-4 pb-10 md:grid-cols-[250px_1fr] md:px-10">
         <aside className="rounded-2xl border border-[#3b2b16] bg-[#12100c] p-4 shadow-sm">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#9f8a66]">Admin</p>
-          <h2 className="mt-1 text-[26px] font-semibold text-[#c89a4b]">DreamLand</h2>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[#9f8a66]">Espace agence</p>
+          <div className="relative mt-2 h-14 w-full">
+            <Image src="/dreamland-logo-cropped.png" alt="Dreamland Travel" fill sizes="220px" className="object-contain object-left" priority />
+          </div>
+          <p className="mt-2 text-[12px] leading-relaxed text-[#d9c9ab]">Choisissez simplement ce que vous voulez faire.</p>
           <nav className="mt-4 space-y-2">
             {links.map((link) => (
-              <Link key={link.href} href={link.href} className="block rounded-md px-3 py-2 text-[13px] text-[#d6c29a] hover:bg-[#1a140c] hover:text-[#c89a4b]">
-                {link.label}
+              <Link key={link.href} href={link.href} className="block rounded-lg border border-[#3b2b16] bg-[#16110a] px-3 py-3 text-[#d6c29a] hover:border-[#5b4526] hover:bg-[#1a140c] hover:text-[#c89a4b]">
+                <span className="block text-[13px] font-semibold">{link.label}</span>
+                <span className="mt-0.5 block text-[11px] text-[#9f8a66]">{link.description}</span>
               </Link>
             ))}
           </nav>

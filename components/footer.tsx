@@ -1,5 +1,7 @@
 ﻿import Link from "next/link";
 
+import Image from "next/image";
+
 const quickLinks = [
   { href: "/", label: "Destinations" },
   { href: "/explore", label: "Voyages organises" },
@@ -24,7 +26,9 @@ export function Footer() {
     <footer className="border-t border-[#3b2b16] bg-[#090909] text-[#f2e4cc]">
       <div className="container-max mx-auto grid grid-cols-1 gap-6 px-5 py-20 md:grid-cols-4 md:px-16">
         <div>
-          <div className="mb-2 text-4xl font-bold italic text-[#c89a4b]">Dreamland Travel</div>
+          <div className="relative mb-3 h-16 w-[260px] max-w-full">
+            <Image src="/dreamland-logo-cropped.png" alt="Dreamland Travel" fill sizes="260px" className="object-contain object-left" />
+          </div>
           <p className="mb-4 text-[12px] uppercase tracking-wider text-[#9f8a66]">Agence de voyage et tourisme</p>
           <p className="text-base text-[#d6c29a]">Experiences de voyage premium en Mediterranee et au coeur du Sahara.</p>
         </div>

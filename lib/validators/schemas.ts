@@ -43,6 +43,17 @@ export const announcementSchema = z.object({
   title: z.string().min(3).max(180),
   description: z.string().min(10).max(5000),
   price: z.coerce.number().min(0),
+  tags: z.array(z.string().trim().min(1).max(40)).max(12).default([]),
+  priceOptions: z
+    .array(
+      z.object({
+        label: z.string().trim().min(2).max(80),
+        price: z.coerce.number().min(0),
+      }),
+    )
+    .max(60)
+    .default([]),
+  richDetails: z.record(z.string(), z.unknown()).default({}),
   image: z.string().min(1),
   categoryId: z.string().min(1),
   location: z.string().min(2).max(180),

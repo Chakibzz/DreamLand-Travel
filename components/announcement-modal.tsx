@@ -6,6 +6,17 @@ import { FormSuccessBadge } from "@/components/form-success-badge";
 
 type BookingService = "CUSTOM_TRIP" | "OMRA" | "TICKETING" | "TRANSFER";
 type TransferType = "AEROPORT_HOTEL" | "INTER_VILLES" | "BUSINESS";
+type PriceOption = { label: string; price: number | string };
+type RichFormula = { name: string; hotel?: string; tariffs?: PriceOption[] };
+type RichDetails = {
+  duration?: string;
+  airline?: string;
+  dates?: string[];
+  formulas?: RichFormula[];
+  included?: string[];
+  excluded?: string[];
+  alert?: string;
+};
 
 type AnnouncementModalProps = {
   open: boolean;
@@ -17,6 +28,9 @@ type AnnouncementModalProps = {
     location?: string;
     categoryName?: string;
     price?: string;
+    tags?: string[];
+    priceOptions?: PriceOption[];
+    richDetails?: RichDetails;
     highlights?: string[];
   } | null;
   serviceType: BookingService;
@@ -52,6 +66,7 @@ export function AnnouncementModal({
     adults: 1,
     children: 0,
     childrenAges: "",
+    selectedPriceOption: "",
     notes: "",
   });
   const [sending, setSending] = useState(false);
@@ -75,6 +90,20 @@ export function AnnouncementModal({
       ? formatPrice(parsedPrice)
       : announcement.price
     : "Sur demande";
+  const priceOptions = announcement.priceOptions ?? [];
+  const richDetails = announcement.richDetails ?? {};
+  const richFormulas = richDetails.formulas ?? [];
+  const hasRichDetails =
+    Boolean(richDetails.duration) ||
+    Boolean(richDetails.airline) ||
+    Boolean(richDetails.dates?.length) ||
+    Boolean(richFormulas.length) ||
+    Boolean(richDetails.included?.length) ||
+    Boolean(richDetails.excluded?.length);
+  const selectablePriceOptions =
+    richFormulas.length > 0
+      ? richFormulas.flatMap((formula) => (formula.tariffs ?? []).map((tariff) => ({ label: `${formula.name} - ${tariff.label}`, price: tariff.price })))
+      : priceOptions;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -101,6 +130,7 @@ export function AnnouncementModal({
             showTransferFields && currentTransferType === "INTER_VILLES" && form.transferTo.trim() ? `Ville d'arrivee: ${form.transferTo.trim()}` : "",
             showTransferFields && currentTransferType === "BUSINESS" && form.companyName.trim() ? `Societe: ${form.companyName.trim()}` : "",
             showTransferFields && currentTransferType === "BUSINESS" && form.pickupAddress.trim() ? `Adresse de prise en charge: ${form.pickupAddress.trim()}` : "",
+            form.selectedPriceOption.trim() ? `Option tarifaire souhaitee: ${form.selectedPriceOption.trim()}` : "",
             form.children > 0 && form.childrenAges.trim() ? `Ages des enfants: ${form.childrenAges.trim()}` : "",
             form.notes,
           ]
@@ -136,6 +166,7 @@ export function AnnouncementModal({
       adults: 1,
       children: 0,
       childrenAges: "",
+      selectedPriceOption: "",
       notes: "",
     });
   };
@@ -156,7 +187,7 @@ export function AnnouncementModal({
             <p className="text-[11px] uppercase tracking-widest text-white/80">{announcement.categoryName || "Offre"}</p>
             <h3 className="mt-1 text-[34px] font-semibold leading-tight">{announcement.title}</h3>
             <p className="mt-1 text-[14px] text-white/90">{announcement.location || "Destination a confirmer"}</p>
-            <p className="mt-3 inline-flex rounded-full bg-[#12100c]/15 px-3 py-1 text-[13px] font-semibold">{displayPrice}</p>
+            <p className="mt-3 inline-flex rounded-full bg-[#12100c]/15 px-3 py-1 text-[13px] font-semibold">A partir de {displayPrice}</p>
           </div>
         </div>
 
@@ -164,6 +195,99 @@ export function AnnouncementModal({
           <div className="rounded-xl border border-[#3b2b16] bg-[#12100c] p-4">
             <h4 className="text-[24px] font-semibold text-[#c89a4b]">Details de l&apos;annonce</h4>
             <p className="mt-2 text-[13px] leading-relaxed text-[#e4d7c0]">{announcement.description}</p>
+            {announcement.tags?.length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {announcement.tags.map((tag) => (
+                  <span key={tag} className="rounded-full border border-[#5b4526] bg-[#090909] px-3 py-1 text-[11px] font-semibold text-[#c89a4b]">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            {hasRichDetails ? (
+              <div className="mt-4 space-y-3">
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {richDetails.duration ? (
+                    <div className="rounded-lg border border-[#3b2b16] bg-[#0f0c08] p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-[#9f8a66]">Duree</p>
+                      <p className="mt-1 text-[13px] font-semibold text-[#e4d7c0]">{richDetails.duration}</p>
+                    </div>
+                  ) : null}
+                  {richDetails.airline ? (
+                    <div className="rounded-lg border border-[#3b2b16] bg-[#0f0c08] p-3">
+                      <p className="text-[10px] uppercase tracking-widest text-[#9f8a66]">Compagnie</p>
+                      <p className="mt-1 text-[13px] font-semibold text-[#e4d7c0]">{richDetails.airline}</p>
+                    </div>
+                  ) : null}
+                </div>
+                {richDetails.dates?.length ? (
+                  <div className="rounded-xl border border-[#3b2b16] bg-[#0f0c08] p-3">
+                    <p className="text-[12px] font-semibold text-[#d6c29a]">Dates disponibles</p>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      {richDetails.dates.map((date) => (
+                        <span key={date} className="rounded-md bg-[#16110a] px-3 py-2 text-[12px] text-[#e4d7c0]">
+                          {date}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                {richFormulas.length > 0 ? (
+                  <div className="space-y-3">
+                    <p className="text-[12px] font-semibold text-[#d6c29a]">Formules et tarifs</p>
+                    {richFormulas.map((formula) => (
+                      <div key={formula.name} className="overflow-hidden rounded-xl border border-[#3b2b16] bg-[#0f0c08]">
+                        <div className="border-b border-[#3b2b16] px-3 py-2">
+                          <p className="text-[13px] font-semibold text-[#c89a4b]">{formula.name}</p>
+                          {formula.hotel ? <p className="text-[11px] text-[#9f8a66]">{formula.hotel}</p> : null}
+                        </div>
+                        <div className="divide-y divide-[#3b2b16]">
+                          {(formula.tariffs ?? []).map((option) => (
+                            <div key={`${formula.name}-${option.label}`} className="flex items-center justify-between gap-4 px-3 py-2 text-[12px]">
+                              <span className="text-[#e4d7c0]">{option.label}</span>
+                              <span className="shrink-0 font-bold text-[#c89a4b]">{formatPrice ? formatPrice(Number(option.price)) : option.price}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                {richDetails.included?.length ? (
+                  <div className="rounded-xl border border-[#3b2b16] bg-[#0f0c08] p-3">
+                    <p className="text-[12px] font-semibold text-[#d6c29a]">Inclus dans le prix</p>
+                    <ul className="mt-2 space-y-1 text-[12px] text-[#e4d7c0]">
+                      {richDetails.included.map((item) => (
+                        <li key={item}>- {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {richDetails.excluded?.length ? (
+                  <div className="rounded-xl border border-[#5b4526] bg-[#16110a] p-3">
+                    <p className="text-[12px] font-semibold text-[#d6c29a]">Non inclus</p>
+                    <ul className="mt-2 space-y-1 text-[12px] text-[#e4d7c0]">
+                      {richDetails.excluded.map((item) => (
+                        <li key={item}>- {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+                {richDetails.alert ? <p className="rounded-lg bg-[#a97b32] px-3 py-2 text-[12px] font-bold text-white">{richDetails.alert}</p> : null}
+              </div>
+            ) : priceOptions.length > 0 ? (
+              <div className="mt-4 overflow-hidden rounded-xl border border-[#3b2b16] bg-[#0f0c08]">
+                <div className="border-b border-[#3b2b16] px-3 py-2 text-[12px] font-semibold text-[#d6c29a]">Tarifs disponibles</div>
+                <div className="divide-y divide-[#3b2b16]">
+                  {priceOptions.map((option) => (
+                    <div key={option.label} className="flex items-center justify-between gap-4 px-3 py-2 text-[12px]">
+                      <span className="text-[#e4d7c0]">{option.label}</span>
+                      <span className="shrink-0 font-bold text-[#c89a4b]">{formatPrice ? formatPrice(Number(option.price)) : option.price}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="mt-3 flex flex-wrap gap-2">
               {(announcement.highlights && announcement.highlights.length > 0
                 ? announcement.highlights
@@ -191,6 +315,22 @@ export function AnnouncementModal({
                 <div>
                   <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Destination / annonce selectionnee</label>
                   <input required value={form.destination || announcement.title} onChange={(e) => setForm((v) => ({ ...v, destination: e.target.value }))} placeholder="Nom de l'offre" className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]" />
+                </div>
+              ) : null}
+              {selectablePriceOptions.length > 0 ? (
+                <div>
+                  <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Option tarifaire souhaitee</label>
+                  <select value={form.selectedPriceOption} onChange={(e) => setForm((v) => ({ ...v, selectedPriceOption: e.target.value }))} className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]">
+                    <option value="">A confirmer avec un conseiller</option>
+                    {selectablePriceOptions.map((option) => {
+                      const label = `${option.label} - ${formatPrice ? formatPrice(Number(option.price)) : option.price}`;
+                      return (
+                        <option key={option.label} value={label}>
+                          {label}
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
               ) : null}
               {showCountryField ? (

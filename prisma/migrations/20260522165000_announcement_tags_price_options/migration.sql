@@ -1,0 +1,3 @@
+ALTER TABLE "Announcement"
+ADD COLUMN "tags" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+ADD COLUMN "priceOptions" JSONB NOT NULL DEFAULT '[]';

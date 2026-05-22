@@ -20,7 +20,17 @@ const testimonials = [
 export default function HomePage() {
   const { formatPrice } = useCurrency();
   const [latestAnnouncements, setLatestAnnouncements] = useState<
-    Array<{ id: string; title: string; description: string; image: string; price: string; location: string }>
+    Array<{
+      id: string;
+      title: string;
+      description: string;
+      image: string;
+      price: string;
+      location: string;
+      tags?: string[];
+      priceOptions?: Array<{ label: string; price: number | string }>;
+      richDetails?: { duration?: string; dates?: string[]; formulas?: Array<{ name: string }> };
+    }>
   >([]);
 
   useEffect(() => {
@@ -112,10 +122,29 @@ export default function HomePage() {
                 <Image src={item.image} alt={item.title} fill className="object-cover image-hover" />
               </div>
               <div className="p-4">
+                {item.tags?.length ? (
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {item.tags.slice(0, 3).map((tag) => (
+                      <span key={tag} className="rounded-full border border-[#5b4526] bg-[#090909] px-2 py-0.5 text-[10px] font-semibold text-[#c89a4b]">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <h3 className="text-[24px] font-semibold text-[#c89a4b]">{item.title}</h3>
                 <p className="mt-1 line-clamp-2 text-[12px] text-[#d9c9ab]">{item.description}</p>
                 <p className="mt-2 text-[11px] text-[#9f8a66]">{item.location}</p>
-                <p className="mt-1 text-[18px] font-bold text-[#c89a4b]">{formatPrice(Number(item.price))}</p>
+                {item.richDetails?.duration || item.richDetails?.dates?.length ? (
+                  <p className="mt-1 text-[11px] text-[#d9c9ab]">
+                    {item.richDetails.duration ? item.richDetails.duration : null}
+                    {item.richDetails.duration && item.richDetails.dates?.length ? " · " : null}
+                    {item.richDetails.dates?.length ? `${item.richDetails.dates.length} departs` : null}
+                  </p>
+                ) : null}
+                <p className="mt-1 text-[18px] font-bold text-[#c89a4b]">A partir de {formatPrice(Number(item.price))}</p>
+                {item.priceOptions?.[0] ? (
+                  <p className="mt-1 text-[11px] text-[#d9c9ab]">{item.priceOptions[0].label}: {formatPrice(Number(item.priceOptions[0].price))}</p>
+                ) : null}
               </div>
             </article>
           ))}

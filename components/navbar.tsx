@@ -24,14 +24,13 @@ export function Navbar() {
   return (
     <header className="fixed top-0 z-[80] w-full border-b border-[#3b2b16] bg-[#090909]/95 backdrop-blur">
       <nav className="container-max mx-auto flex h-14 items-center gap-4 px-4 md:h-16 md:px-8">
-        <Link href="/" className="flex flex-none items-center gap-2">
-          <span className="relative h-8 w-8 flex-none overflow-hidden rounded-full border border-[#5b4526] bg-[#12100c]">
-            <Image src="/globe.svg" alt="Logo Dreamland Travel" fill sizes="32px" className="p-1" />
+        <Link href="/" className="flex flex-none items-center">
+          <span className="relative block h-11 w-[190px] md:h-14 md:w-[260px]">
+            <Image src="/dreamland-logo-cropped.png" alt="Dreamland Travel" fill sizes="(max-width: 768px) 190px, 260px" className="object-contain object-left" priority />
           </span>
-          <span className="text-[20px] font-bold italic leading-none text-[#c89a4b] md:text-[28px]">Dreamland Travel</span>
         </Link>
 
-        <div className="hidden flex-1 items-center justify-center gap-4 md:flex lg:gap-6">
+        <div className="hidden flex-1 items-center justify-center gap-3 md:flex lg:gap-4">
           {links.map((link) => {
             const active = pathname === link.href;
             return (
@@ -53,7 +52,7 @@ export function Navbar() {
         {status === "authenticated" ? (
           <Link
             href="/admin"
-            className="hidden rounded-md border border-[#5b4526] bg-[#16110a] px-3 py-2 text-[12px] font-semibold text-[#c89a4b] hover:bg-[#1a130b] md:inline-flex"
+            className="hidden rounded-md border border-[#5b4526] bg-[#16110a] px-3 py-2 text-[12px] font-semibold text-[#c89a4b] hover:bg-[#1a130b] lg:inline-flex"
           >
             Retour admin
           </Link>

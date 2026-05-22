@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/server/prisma";
 import { announcementSchema } from "@/lib/validators/schemas";
 import { apiSuccess, handleApiError } from "@/lib/server/api-response";
@@ -15,7 +16,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const updated = await prisma.announcement.update({
       where: { id },
-      data: parsed,
+      data: {
+        ...parsed,
+        priceOptions: parsed.priceOptions as Prisma.InputJsonValue,
+        richDetails: parsed.richDetails as Prisma.InputJsonValue,
+      },
       include: { category: true },
     });
 

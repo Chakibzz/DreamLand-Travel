@@ -42,6 +42,9 @@ model Announcement {
   slug        String    @unique
   description String
   price       Decimal   @db.Decimal(10, 2)
+  tags        String[]  @default([])
+  priceOptions Json     @default("[]")
+  richDetails  Json      @default("{}")
   image       String
   location    String
   categoryId  String

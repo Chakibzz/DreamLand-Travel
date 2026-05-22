@@ -60,23 +60,23 @@ export default async function AdminHomePage() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-[#3b2b16] bg-[#12100c] p-5 shadow-sm">
-        <h1 className="text-[34px] font-semibold text-[#c89a4b]">Dashboard admin</h1>
-        <p className="text-[13px] text-[#d9c9ab]">Pilotage quotidien de l&apos;agence et traitement des demandes clients.</p>
+        <h1 className="text-[34px] font-semibold text-[#c89a4b]">Accueil admin</h1>
+        <p className="text-[13px] text-[#d9c9ab]">Retrouvez les actions importantes sans chercher dans les menus.</p>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
           <Link href="/admin/requests" className="rounded-lg bg-[#c89a4b] px-4 py-3 text-center text-[13px] font-semibold text-white hover:bg-[#004b92]">
-            Ouvrir le workflow clients
+            Voir les demandes clients
           </Link>
           <Link href="/admin/announcements" className="rounded-lg border border-[#5b4526] px-4 py-3 text-center text-[13px] font-semibold text-[#c89a4b] hover:bg-[#16110a]">
-            Gerer les annonces
+            Ajouter une annonce
           </Link>
           <Link href="/admin/categories" className="rounded-lg border border-[#5b4526] px-4 py-3 text-center text-[13px] font-semibold text-[#c89a4b] hover:bg-[#16110a]">
-            Gerer les categories
+            Voir les types d&apos;offres
           </Link>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[{ label: "Annonces", value: announcements }, { label: "Categories", value: categories }, { label: "Contacts", value: contacts }, { label: "Reservations", value: bookings }].map((card) => (
+        {[{ label: "Annonces en ligne", value: announcements }, { label: "Types d'offres", value: categories }, { label: "Messages reçus", value: contacts }, { label: "Demandes de réservation", value: bookings }].map((card) => (
           <article key={card.label} className="rounded-xl border border-[#3b2b16] bg-[#12100c] p-4 shadow-sm">
             <p className="text-[11px] uppercase tracking-widest text-[#9f8a66]">{card.label}</p>
             <p className="mt-1 text-[36px] font-semibold text-[#c89a4b]">{card.value}</p>
@@ -95,7 +95,7 @@ export default async function AdminHomePage() {
 
       <div className="rounded-2xl border border-[#3b2b16] bg-[#12100c] p-5 shadow-sm">
         <div className="flex items-center justify-between">
-          <h2 className="text-[24px] font-semibold text-[#c89a4b]">Etat du pipeline reservations</h2>
+          <h2 className="text-[24px] font-semibold text-[#c89a4b]">Demandes à traiter</h2>
           <span className="rounded-full bg-[#1a130b] px-3 py-1 text-[12px] font-semibold text-[#f4d7a1]">{pendingRatio}% en attente</span>
         </div>
         <div className="mt-4 h-3 overflow-hidden rounded-full bg-[#1a140d]">

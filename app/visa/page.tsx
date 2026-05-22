@@ -1,8 +1,9 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnnouncementModal } from "@/components/announcement-modal";
+import { useCurrency } from "@/components/currency-context";
 
 const visaOffers = [
   {
@@ -41,14 +42,29 @@ const visaTypes = [
 ] as const;
 
 export default function VisaPage() {
+  const { formatPrice } = useCurrency();
+  const [announcements, setAnnouncements] = useState<
+    Array<{ id: string; title: string; price: string; image: string; description: string; location?: string; tags?: string[] }>
+  >([]);
   const [selectedVisa, setSelectedVisa] = useState<{
     title: string;
     description: string;
     image: string;
     location?: string;
     categoryName?: string;
+    price?: string;
+    tags?: string[];
     highlights?: string[];
   } | null>(null);
+
+  useEffect(() => {
+    const loadAnnouncements = async () => {
+      const response = await fetch("/api/announcements?category=Services%20Visa");
+      const json = await response.json();
+      if (response.ok && json.success) setAnnouncements(json.data ?? []);
+    };
+    void loadAnnouncements();
+  }, []);
 
   const openVisaModal = (data: {
     title: string;
@@ -76,6 +92,42 @@ export default function VisaPage() {
       </section>
 
       <section className="container-max mx-auto px-4 py-10 scroll-reveal md:px-10">
+        {announcements.length > 0 ? (
+          <div className="mb-8">
+            <h2 className="text-center text-[40px] font-semibold text-[#c89a4b]">Offres visa publiees</h2>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {announcements.map((item) => (
+                <article key={item.id} className="group overflow-hidden rounded-xl border border-[#3b2b16] bg-[#12100c] shadow-sm">
+                  <div className="relative h-[170px]">
+                    <Image src={item.image} alt={item.title} fill className="object-cover image-hover" quality={100} unoptimized />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-[24px] font-semibold text-[#c89a4b]">{item.title}</h3>
+                    <p className="mt-1 text-[13px] font-semibold text-[#d9c9ab]">A partir de {formatPrice(Number(item.price))}</p>
+                    <p className="mt-2 line-clamp-2 text-[12px] text-[#9f8a66]">{item.description}</p>
+                    <button
+                      onClick={() =>
+                        setSelectedVisa({
+                          title: item.title,
+                          description: item.description,
+                          image: item.image,
+                          location: item.location,
+                          categoryName: "Services Visa",
+                          price: item.price,
+                          tags: item.tags,
+                        })
+                      }
+                      className="mt-3 rounded-md border border-[#5f4722] px-3 py-1 text-[12px] font-semibold text-[#30507f] hover:bg-[#16110a]"
+                    >
+                      Voir details
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <article className="mb-8 rounded-2xl border border-[#3b2b16] bg-[#12100c] p-6 shadow-[0_18px_45px_-30px_rgba(0,35,85,0.6)]">
           <h2 className="text-[30px] font-semibold text-[#c89a4b]">Voyagez sans stress avec DreamLand Travel</h2>
           <p className="mt-3 text-[14px] text-[#d9c9ab]">Obtenez votre E-Visa facilement vers plusieurs destinations.</p>
@@ -182,6 +234,7 @@ export default function VisaPage() {
         open={Boolean(selectedVisa)}
         onClose={() => setSelectedVisa(null)}
         announcement={selectedVisa}
+        formatPrice={formatPrice}
         serviceType="CUSTOM_TRIP"
         showCountryField
       />

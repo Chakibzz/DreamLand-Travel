@@ -7,9 +7,15 @@ type ServiceBookingFormProps = {
   serviceType: "CUSTOM_TRIP" | "OMRA" | "TICKETING" | "TRANSFER";
   defaultDestination: string;
   title: string;
+  customTripMode?: boolean;
+  omraMode?: boolean;
 };
 
-export function ServiceBookingForm({ serviceType, defaultDestination, title }: ServiceBookingFormProps) {
+const customTripCriteria = ["Aqua park", "Hotel 5*", "All inclusive", "Plage", "Famille", "Luxe", "Charme", "Circuits culturels", "Guide francophone", "Petit-dejeuner inclus"];
+const destinationSuggestions = ["Maldives", "Bali", "Egypte", "Istanbul", "Tunisie", "Dubai", "Turquie", "Thailande"];
+const omraCriteria = ["Hotel proche Haram", "Vol inclus", "Transferts inclus", "Guide religieux", "Petit-dejeuner", "Demi-pension", "Chambre double", "Chambre triple", "Depart Alger", "Groupe famille"];
+
+export function ServiceBookingForm({ serviceType, defaultDestination, title, customTripMode = false, omraMode = false }: ServiceBookingFormProps) {
   const isTicketing = serviceType === "TICKETING";
   const isTransfer = serviceType === "TRANSFER";
   const [form, setForm] = useState({
@@ -29,10 +35,29 @@ export function ServiceBookingForm({ serviceType, defaultDestination, title }: S
     adults: 1,
     children: 0,
     childrenAges: "",
+    budget: "",
+    travelStyle: "",
+    omraFormula: "",
+    omraDuration: "",
+    criteria: [] as string[],
     notes: "",
   });
   const [status, setStatus] = useState<{ type: "idle" | "success" | "error"; message: string }>({ type: "idle", message: "" });
   const [sending, setSending] = useState(false);
+
+  const toggleCriterion = (criterion: string) => {
+    setForm((prev) => ({
+      ...prev,
+      criteria: prev.criteria.includes(criterion) ? prev.criteria.filter((item) => item !== criterion) : [...prev.criteria, criterion],
+    }));
+  };
+
+  const addDestinationSuggestion = (destination: string) => {
+    setForm((prev) => ({
+      ...prev,
+      destination: prev.destination === defaultDestination || !prev.destination.trim() ? destination : `${prev.destination}, ${destination}`,
+    }));
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -59,6 +84,12 @@ export function ServiceBookingForm({ serviceType, defaultDestination, title }: S
           isTransfer && form.transferType === "INTER_VILLES" && form.transferTo.trim() ? `Ville d'arrivee: ${form.transferTo.trim()}` : "",
           isTransfer && form.transferType === "BUSINESS" && form.companyName.trim() ? `Societe: ${form.companyName.trim()}` : "",
           isTransfer && form.transferType === "BUSINESS" && form.pickupAddress.trim() ? `Adresse de prise en charge: ${form.pickupAddress.trim()}` : "",
+          (customTripMode || omraMode) && form.criteria.length > 0 ? `Criteres souhaites: ${form.criteria.join(", ")}` : "",
+          customTripMode && form.travelStyle.trim() ? `Style de sejour: ${form.travelStyle.trim()}` : "",
+          omraMode && form.omraFormula.trim() ? `Formule Omra souhaitee: ${form.omraFormula.trim()}` : "",
+          omraMode && form.omraDuration.trim() ? `Duree souhaitee: ${form.omraDuration.trim()}` : "",
+          customTripMode && form.budget.trim() ? `Budget indicatif: ${form.budget.trim()}` : "",
+          omraMode && form.budget.trim() ? `Budget indicatif Omra: ${form.budget.trim()}` : "",
           form.children > 0 && form.childrenAges.trim() ? `Ages des enfants: ${form.childrenAges.trim()}` : "",
           form.notes.trim(),
         ]
@@ -94,6 +125,11 @@ export function ServiceBookingForm({ serviceType, defaultDestination, title }: S
       adults: 1,
       children: 0,
       childrenAges: "",
+      budget: "",
+      travelStyle: "",
+      omraFormula: "",
+      omraDuration: "",
+      criteria: [],
       notes: "",
     });
   };
@@ -203,8 +239,110 @@ export function ServiceBookingForm({ serviceType, defaultDestination, title }: S
           <div>
             <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Destination / offre souhaitee</label>
             <input required value={form.destination} onChange={(e) => setForm((v) => ({ ...v, destination: e.target.value }))} placeholder="Ex: Omra Confort ou Istanbul" className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]" />
+            {customTripMode ? (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {destinationSuggestions.map((destination) => (
+                  <button
+                    key={destination}
+                    type="button"
+                    onClick={() => addDestinationSuggestion(destination)}
+                    className="rounded-full border border-[#5b4526] bg-[#16110a] px-3 py-1 text-[11px] font-semibold text-[#d9c9ab] hover:bg-[#1a130b]"
+                  >
+                    {destination}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
         )}
+        {customTripMode ? (
+          <div className="rounded-xl border border-[#3b2b16] bg-[#16110a] p-4">
+            <p className="text-[13px] font-semibold text-[#c89a4b]">Ce que vous voulez dans le sejour</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {customTripCriteria.map((criterion) => {
+                const active = form.criteria.includes(criterion);
+                return (
+                  <button
+                    key={criterion}
+                    type="button"
+                    onClick={() => toggleCriterion(criterion)}
+                    className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                      active ? "border-[#c89a4b] bg-[#c89a4b] text-[#12100c]" : "border-[#5b4526] bg-[#090909] text-[#d9c9ab]"
+                    }`}
+                  >
+                    {criterion}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Style du sejour</label>
+                <select value={form.travelStyle} onChange={(e) => setForm((v) => ({ ...v, travelStyle: e.target.value }))} className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]">
+                  <option value="">A confirmer</option>
+                  <option>Famille</option>
+                  <option>Luxe</option>
+                  <option>Romantique</option>
+                  <option>Culturel</option>
+                  <option>Repos plage</option>
+                  <option>Aventure</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Budget indicatif</label>
+                <input value={form.budget} onChange={(e) => setForm((v) => ({ ...v, budget: e.target.value }))} placeholder="Ex: 250000 DA par personne" className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]" />
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {omraMode ? (
+          <div className="rounded-xl border border-[#3b2b16] bg-[#16110a] p-4">
+            <p className="text-[13px] font-semibold text-[#c89a4b]">Preferences Omra</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {omraCriteria.map((criterion) => {
+                const active = form.criteria.includes(criterion);
+                return (
+                  <button
+                    key={criterion}
+                    type="button"
+                    onClick={() => toggleCriterion(criterion)}
+                    className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                      active ? "border-[#c89a4b] bg-[#c89a4b] text-[#12100c]" : "border-[#5b4526] bg-[#090909] text-[#d9c9ab]"
+                    }`}
+                  >
+                    {criterion}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Formule souhaitee</label>
+                <select value={form.omraFormula} onChange={(e) => setForm((v) => ({ ...v, omraFormula: e.target.value }))} className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]">
+                  <option value="">A confirmer</option>
+                  <option>Economique</option>
+                  <option>Confort</option>
+                  <option>VIP</option>
+                  <option>Famille</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Duree souhaitee</label>
+                <select value={form.omraDuration} onChange={(e) => setForm((v) => ({ ...v, omraDuration: e.target.value }))} className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]">
+                  <option value="">A confirmer</option>
+                  <option>10 jours</option>
+                  <option>14 jours</option>
+                  <option>21 jours</option>
+                  <option>Ramadan</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Budget indicatif</label>
+                <input value={form.budget} onChange={(e) => setForm((v) => ({ ...v, budget: e.target.value }))} placeholder="Ex: 280000 DA" className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]" />
+              </div>
+            </div>
+          </div>
+        ) : null}
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Date de depart (a partir de)</label>
