@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
-export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://frontend-six-eta-75.vercel.app";
+const fallbackSiteUrl = "https://frontend-chakibzzs-projects.vercel.app";
+const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+
+export const siteUrl = configuredSiteUrl && configuredSiteUrl !== "\"\"" ? configuredSiteUrl : fallbackSiteUrl;
 
 export const siteConfig = {
   name: "Dreamland Travel",
@@ -65,4 +68,3 @@ export function buildMetadata({ title, description, path = "/", image = "/heroes
         },
   };
 }
-
