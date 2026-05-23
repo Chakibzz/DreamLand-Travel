@@ -72,7 +72,7 @@ export default function ExplorePage() {
         <div className="bg-hero-gradient absolute inset-0" />
         <div className="container-max relative mx-auto px-4 pt-24 md:px-10">
           <h1 className="max-w-xl text-[56px] font-bold leading-[58px] text-white">Voyages organises</h1>
-          <p className="mt-2 max-w-lg text-[14px] text-white/90">Toutes les offres affichees ici sont ajoutees manuellement depuis l&apos;admin.</p>
+          <p className="mt-2 max-w-lg text-[14px] text-white/90">Decouvrez les departs disponibles, comparez les avantages et trouvez la formule qui correspond a votre budget.</p>
         </div>
       </header>
 
@@ -119,7 +119,6 @@ export default function ExplorePage() {
         <div className="md:col-span-3">
           <div className="mb-4 flex items-center justify-between text-[12px] text-[#d9c9ab]">
             <span>{filteredAnnouncements.length} annonce(s) affichee(s)</span>
-            <span>Source : admin</span>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {filteredAnnouncements.map((item) => (

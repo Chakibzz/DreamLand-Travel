@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ServiceBookingForm } from "@/components/service-booking-form";
 import { AnnouncementModal } from "@/components/announcement-modal";
@@ -34,10 +35,44 @@ const customBenefits = [
 
 const destinationIdeas = ["Maldives", "Bali", "Egypte", "Istanbul", "Tunisie", "Dubai"];
 
+const customTripSlides = [
+  {
+    title: "Tunisie balneaire",
+    text: "Plages turquoise, hotel familial, aqua park ou sejour calme selon vos envies.",
+    image: "/custom-trip/custom-trip-tunisia-beach.jpg",
+  },
+  {
+    title: "Tunisie en liberte",
+    text: "Vols, transferts et hotel adaptes a votre budget pour un sejour simple a organiser.",
+    image: "/custom-trip/custom-trip-tunisia-sea.jpg",
+  },
+  {
+    title: "Istanbul culturelle",
+    text: "Quartier, hotel, visites et rythme du programme ajustes a votre style de voyage.",
+    image: "/custom-trip/custom-trip-istanbul-view.jpg",
+  },
+  {
+    title: "Bosphore & city break",
+    text: "Un sejour court ou complet avec vols, hotel central, croisiere et activites au choix.",
+    image: "/custom-trip/custom-trip-istanbul-bosphore.jpg",
+  },
+  {
+    title: "Maldives premium",
+    text: "Villa sur pilotis, formule repas, transferts et budget construits autour de votre projet.",
+    image: "/custom-trip/custom-trip-maldives-villa.jpg",
+  },
+  {
+    title: "Maldives plage",
+    text: "Un voyage sur mesure pour lune de miel, famille ou pause au soleil.",
+    image: "/custom-trip/custom-trip-maldives-beach.jpg",
+  },
+] as const;
+
 export default function SejourALaCartePage() {
   const { formatPrice } = useCurrency();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+  const [activeCustomSlide, setActiveCustomSlide] = useState(0);
 
   useEffect(() => {
     const loadAnnouncements = async () => {
@@ -49,6 +84,15 @@ export default function SejourALaCartePage() {
     };
     void loadAnnouncements();
   }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveCustomSlide((current) => (current + 1) % customTripSlides.length);
+    }, 5200);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const customSlide = customTripSlides[activeCustomSlide];
 
   return (
     <>
@@ -91,6 +135,44 @@ export default function SejourALaCartePage() {
           </div>
         </div>
 
+        <div className="mb-8 overflow-hidden rounded-2xl border border-[#3b2b16] bg-[#12100c] shadow-sm">
+          <div className="grid min-h-[420px] lg:grid-cols-[1.25fr_0.75fr]">
+            <div className="relative min-h-[420px]">
+              <Image src={customSlide.image} alt={customSlide.title} fill sizes="(max-width: 1024px) 100vw, 62vw" className="object-cover" quality={100} />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#090909]/80 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-[#12100c]" />
+              <div className="absolute bottom-4 left-4 flex gap-2">
+                {customTripSlides.map((item, index) => (
+                  <button
+                    key={item.title}
+                    type="button"
+                    onClick={() => setActiveCustomSlide(index)}
+                    aria-label={`Voir ${item.title}`}
+                    className={`h-2.5 rounded-full transition-all ${index === activeCustomSlide ? "w-9 bg-[#c89a4b]" : "w-2.5 bg-white/60 hover:bg-white"}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col justify-center p-5 md:p-8">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9f8a66]">Inspirations a la carte</p>
+              <h2 className="mt-2 text-[38px] font-semibold leading-[44px] text-[#c89a4b]">{customSlide.title}</h2>
+              <p className="mt-3 text-[14px] leading-7 text-[#d9c9ab]">{customSlide.text}</p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <span className="rounded-full border border-[#5b4526] px-3 py-1 text-[12px] font-semibold text-[#d9c9ab]">Hotel selon criteres</span>
+                <span className="rounded-full border border-[#5b4526] px-3 py-1 text-[12px] font-semibold text-[#d9c9ab]">Vols adaptes</span>
+                <span className="rounded-full border border-[#5b4526] px-3 py-1 text-[12px] font-semibold text-[#d9c9ab]">Activites au choix</span>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href="#formulaire-sejour" className="rounded-lg bg-[#c89a4b] px-5 py-3 text-[13px] font-bold text-white hover:bg-[#b88735]">
+                  Construire ce sejour
+                </Link>
+                <button type="button" onClick={() => setActiveCustomSlide((activeCustomSlide + 1) % customTripSlides.length)} className="rounded-lg border border-[#5f4722] px-5 py-3 text-[13px] font-bold text-[#d9c9ab] hover:bg-[#16110a]">
+                  Voir une autre idee
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-3">
           {announcements.map((item) => (
             <article key={item.id} className="group overflow-hidden rounded-xl border border-[#3b2b16] bg-[#12100c] shadow-sm">
@@ -123,7 +205,7 @@ export default function SejourALaCartePage() {
           </p>
         ) : null}
 
-        <div className="mt-6">
+        <div id="formulaire-sejour" className="mt-6 scroll-mt-28">
           <ServiceBookingForm serviceType="CUSTOM_TRIP" defaultDestination="Sejour a la carte" title="Construire mon sejour sur mesure" customTripMode />
         </div>
       </section>

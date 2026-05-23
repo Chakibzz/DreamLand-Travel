@@ -5,20 +5,66 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCurrency } from "@/components/currency-context";
 
-const cards = [
-  { title: "Tassili n'Ajjer", reviews: "5.0 (124 avis)", usd: 1250, tag: "AVENTURE", image: "/upscaled/2e3467b739eb.jpg" },
-  { title: "Casbah d'Alger", reviews: "4.9 (86 avis)", usd: 890, tag: "CULTURE", image: "/upscaled/b62cb6f8483e.jpg" },
-  { title: "Timgad antique", reviews: "5.0 (52 avis)", usd: 950, tag: "HISTOIRE", image: "/upscaled/0fe489d651c3.jpg" },
-];
-
 const testimonials = [
   ["DreamLand Travel a depasse toutes nos attentes. Notre expedition dans le Sahara etait parfaitement organisee.", "Mohamed F.", "VOYAGEUR PASSIONNE"],
   ["L'itineraire sur mesure a Alger nous a permis de decouvrir des lieux que les touristes ratent souvent.", "Yasmine B.", "EXPLORATRICE CULTURELLE"],
   ["Une attention aux details remarquable. Chaque transfert et chaque hotel etaient irreprochables.", "Sofiane K.", "VOYAGEUR PREMIUM"],
 ] as const;
 
+const serviceHighlights = [
+  {
+    title: "Voyages organises",
+    eyebrow: "Annonce voyage organise",
+    text: "Circuits publies par l'agence avec dates, programmes, avantages visibles et tarifs par chambre.",
+    image: "/heroes/explore-hero-generated.png",
+    href: "/explore",
+    cta: "Voir les voyages",
+  },
+  {
+    title: "Omra",
+    eyebrow: "Accompagnement spirituel",
+    text: "Formules Omra avec suivi dossier, preferences hotel, type de chambre et assistance avant depart.",
+    image: "/omra-hero-unsplash.jpg",
+    href: "/omra",
+    cta: "Voir la Omra",
+  },
+  {
+    title: "Billetterie",
+    eyebrow: "Vols & billets",
+    text: "Recherche de vols, horaires, bagages et options adaptes au planning du client.",
+    image: "/heroes/billetterie-hero-enhanced.jpg",
+    href: "/billetterie",
+    cta: "Demander un billet",
+  },
+  {
+    title: "Sejour a la carte",
+    eyebrow: "Voyage sur mesure",
+    text: "Destination, hotel, aqua park, all inclusive, activites et budget construits selon l'envie du client.",
+    image: "/custom-trip/custom-trip-maldives-villa.jpg",
+    href: "/sejour-a-la-carte",
+    cta: "Construire mon sejour",
+  },
+  {
+    title: "Services Visa",
+    eyebrow: "Dossier & suivi",
+    text: "Accompagnement pour preparer le dossier, verifier les pieces et suivre la demande.",
+    image: "/heroes/visa-hero-generated.png",
+    href: "/visa",
+    cta: "Voir les visas",
+  },
+  {
+    title: "Transfert",
+    eyebrow: "Chauffeur & trajet",
+    text: "Transferts aeroport, hotel, inter-villes et trajets professionnels avec reservation rapide.",
+    image: "/heroes/transfert-hero-enhanced.jpg",
+    href: "/transfert",
+    cta: "Reserver un transfert",
+  },
+] as const;
+
 export default function HomePage() {
   const { formatPrice } = useCurrency();
+  const [activeServiceIndex, setActiveServiceIndex] = useState(0);
   const [latestAnnouncements, setLatestAnnouncements] = useState<
     Array<{
       id: string;
@@ -44,6 +90,15 @@ export default function HomePage() {
     void load();
   }, []);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveServiceIndex((current) => (current + 1) % serviceHighlights.length);
+    }, 5600);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const activeService = serviceHighlights[activeServiceIndex];
+
   return (
     <>
       <section className="relative h-[610px] overflow-hidden scroll-reveal md:h-[760px]">
@@ -52,40 +107,55 @@ export default function HomePage() {
         <div className="container-max relative mx-auto px-4 pt-36 md:px-10 md:pt-48">
           <h1 className="max-w-[560px] text-[56px] font-bold leading-[58px] text-white">Decouvrez la Magie de l&apos;Algerie</h1>
           <div className="mt-7 max-w-[720px] rounded-xl border border-white/20 bg-[#12100c]/25 p-3 backdrop-blur-xl">
-            <p className="mb-2 px-1 text-[12px] text-white/85">Acces rapide a nos services les plus demandes :</p>
-            <div className="flex flex-wrap gap-2">
-              <Link href="/explore" className="rounded-md border border-[#5f4722] bg-[#12100c] px-4 py-2 text-[12px] font-semibold text-[#d9c9ab] hover:bg-[#1a140c]">Voyages organises</Link>
-              <Link href="/omra" className="rounded-md border border-[#5f4722] bg-[#12100c] px-4 py-2 text-[12px] font-semibold text-[#d9c9ab] hover:bg-[#1a140c]">Omra</Link>
-              <Link href="/visa" className="rounded-md border border-[#5f4722] bg-[#12100c] px-4 py-2 text-[12px] font-semibold text-[#d9c9ab] hover:bg-[#1a140c]">Services Visa</Link>
-              <Link href="/billetterie" className="rounded-md border border-[#5f4722] bg-[#12100c] px-4 py-2 text-[12px] font-semibold text-[#d9c9ab] hover:bg-[#1a140c]">Billetterie</Link>
-            </div>
+            <p className="px-1 text-[14px] leading-7 text-white/90">
+              Des voyages organises, sejours personnalises, Omra, billets, transferts et services visa prepares avec un suivi humain du premier contact jusqu&apos;au retour.
+            </p>
           </div>
         </div>
       </section>
 
-      <section className="container-max mx-auto bg-[#f3f4fb] px-4 py-14 scroll-reveal md:px-10">
-        <div className="mb-5 flex items-end justify-between">
+      <section className="container-max mx-auto px-4 py-14 scroll-reveal md:px-10">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] font-bold tracking-[0.16em] text-[#a97b32]">EXPERIENCES SUR MESURE</p>
-            <h2 className="mt-1 text-[42px] font-semibold leading-[48px] text-[#c89a4b]">Destinations selectionnees</h2>
+            <p className="text-[10px] font-bold tracking-[0.16em] text-[#a97b32]">SERVICES DREAMLAND</p>
+            <h2 className="mt-1 text-[42px] font-semibold leading-[48px] text-[#c89a4b]">Tout le voyage au meme endroit</h2>
           </div>
-          <span className="text-[20px] text-[#c89a4b]">Voir toutes les destinations ?</span>
+          <Link href={activeService.href} className="rounded-lg border border-[#5f4722] px-4 py-2 text-[13px] font-bold text-[#d9c9ab] hover:bg-[#16110a]">
+            {activeService.cta}
+          </Link>
         </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          {cards.map((card) => (
-            <article key={card.title} className="group overflow-hidden rounded-xl bg-[#12100c] card-shadow">
-              <div className="relative h-[180px]">
-                <Image src={card.image} alt={card.title} fill sizes="(max-width:768px) 100vw, 33vw" quality={100} unoptimized className="object-cover image-hover" />
-                <span className="absolute left-3 top-3 rounded bg-[#c89a4b] px-2 py-0.5 text-[9px] font-bold text-white">{card.tag}</span>
+        <div className="overflow-hidden rounded-2xl border border-[#3b2b16] bg-[#12100c] shadow-sm">
+          <div className="grid min-h-[430px] lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="relative min-h-[430px]">
+              <Image src={activeService.image} alt={activeService.title} fill sizes="(max-width: 1024px) 100vw, 55vw" quality={100} unoptimized className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#090909]/75 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-[#12100c]" />
+            </div>
+            <div className="flex flex-col justify-center p-5 md:p-8">
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9f8a66]">{activeService.eyebrow}</p>
+              <h3 className="mt-2 text-[44px] font-semibold leading-[50px] text-[#c89a4b]">{activeService.title}</h3>
+              <p className="mt-3 text-[15px] leading-7 text-[#d9c9ab]">{activeService.text}</p>
+              <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                {serviceHighlights.map((service, index) => (
+                  <button
+                    key={service.title}
+                    type="button"
+                    onClick={() => setActiveServiceIndex(index)}
+                    className={`rounded-lg border px-3 py-2 text-left text-[12px] font-semibold transition ${index === activeServiceIndex ? "border-[#c89a4b] bg-[#1d160d] text-[#c89a4b]" : "border-[#3b2b16] text-[#d9c9ab] hover:bg-[#16110a]"}`}
+                  >
+                    {service.title}
+                  </button>
+                ))}
               </div>
-              <div className="p-4">
-                <h3 className="text-[34px] font-semibold leading-[40px] text-[#c89a4b]">{card.title}</h3>
-                <p className="mt-1 text-[12px] text-[#d9c9ab]">? {card.reviews}</p>
-                <p className="mt-3 text-[10px] text-[#9f8a66]">A PARTIR DE</p>
-                <p className="text-[25px] font-bold text-[#c89a4b]">{formatPrice(card.usd)}</p>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <Link href={activeService.href} className="rounded-lg bg-[#c89a4b] px-5 py-3 text-[13px] font-bold text-white hover:bg-[#b88735]">
+                  {activeService.cta}
+                </Link>
+                <button type="button" onClick={() => setActiveServiceIndex((activeServiceIndex + 1) % serviceHighlights.length)} className="rounded-lg border border-[#5f4722] px-5 py-3 text-[13px] font-bold text-[#d9c9ab] hover:bg-[#16110a]">
+                  Service suivant
+                </button>
               </div>
-            </article>
-          ))}
+            </div>
+          </div>
         </div>
       </section>
 

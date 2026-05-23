@@ -31,6 +31,9 @@ export function Footer() {
           </div>
           <p className="mb-4 text-[12px] uppercase tracking-wider text-[#9f8a66]">Agence de voyage et tourisme</p>
           <p className="text-base text-[#d6c29a]">Experiences de voyage premium en Mediterranee et au coeur du Sahara.</p>
+          <Link href="/admin-login?from=%2Fadmin" className="mt-5 inline-flex rounded-lg border border-[#5f4722] px-4 py-2 text-[12px] font-bold text-[#d6c29a] hover:bg-[#16110a] hover:text-[#e0b86b]">
+            Acces staff
+          </Link>
         </div>
 
         <div>
