@@ -13,11 +13,15 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: "fr-DZ",
     icons: [
       {
-        src: "/favicon.ico",
-        sizes: "any",
-        type: "image/x-icon",
+        src: "/icon.png?v=20260524",
+        sizes: "512x512",
+        type: "image/png",
+      },
+      {
+        src: "/apple-icon.png?v=20260524",
+        sizes: "180x180",
+        type: "image/png",
       },
     ],
   };
 }
-

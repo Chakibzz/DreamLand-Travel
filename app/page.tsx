@@ -20,7 +20,7 @@ const serviceHighlights = [
     image: "/heroes/explore-hero-generated.png",
     href: "/explore",
     cta: "Voir les voyages",
-    icon: "route",
+    icon: "luggage",
   },
   {
     title: "Omra",
@@ -74,13 +74,15 @@ type ServiceIconName = (typeof serviceHighlights)[number]["icon"];
 function ServiceIcon({ name }: { name: ServiceIconName }) {
   const common = "h-8 w-8";
 
-  if (name === "route") {
+  if (name === "luggage") {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true" className={common} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M5 19c3-6 11 0 14-6" />
-        <path d="M5 5c3 6 11 0 14 6" />
-        <circle cx="5" cy="19" r="1.8" />
-        <circle cx="19" cy="5" r="1.8" />
+        <path d="M9 7V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8V7" />
+        <rect x="6" y="7" width="12" height="12" rx="2.2" />
+        <path d="M9 10v6" />
+        <path d="M15 10v6" />
+        <path d="M8.5 20v-1" />
+        <path d="M15.5 20v-1" />
       </svg>
     );
   }

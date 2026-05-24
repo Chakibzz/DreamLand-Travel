@@ -40,11 +40,11 @@ export const metadata: Metadata = {
   category: "travel",
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/icon.png?v=20260524", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico?v=20260524", sizes: "any" },
     ],
-    shortcut: "/favicon.ico",
-    apple: "/apple-icon.png",
+    shortcut: "/favicon.ico?v=20260524",
+    apple: "/apple-icon.png?v=20260524",
   },
 };
 
