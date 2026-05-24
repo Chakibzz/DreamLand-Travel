@@ -17,7 +17,7 @@ export const metadata: Metadata = buildMetadata({
 const links = [
   { href: "/admin", label: "Accueil admin", description: "Vue rapide du jour" },
   { href: "/admin/requests", label: "Demandes clients", description: "Reservations et messages" },
-  { href: "/admin/announcements", label: "Créer / modifier une annonce", description: "Offres visibles sur le site" },
+  { href: "/admin/announcements", label: "Creer / modifier une annonce", description: "Offres visibles sur le site" },
   { href: "/admin/categories", label: "Types d'offres", description: "Voyage, Omra, Visa..." },
 ];
 
@@ -26,9 +26,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!session) redirect("/admin-login");
 
   return (
-    <div className="min-h-screen bg-[#090909] pt-20">
+    <div className="min-h-screen bg-[#f4ead8] pt-20 text-[#22180d]">
       <div className="container-max mx-auto grid gap-4 px-4 pb-10 md:grid-cols-[250px_1fr] md:px-10">
-        <aside className="rounded-2xl border border-[#3b2b16] bg-[#12100c] p-4 shadow-sm">
+        <aside className="rounded-2xl border border-[#3b2b16] bg-[#12100c] p-4 shadow-[0_18px_45px_rgba(72,45,14,0.12)]">
           <p className="text-[11px] font-bold uppercase tracking-widest text-[#9f8a66]">Espace agence</p>
           <div className="relative mt-2 h-14 w-full">
             <Image src="/dreamland-logo-cropped.png" alt="Dreamland Travel" fill sizes="220px" className="object-contain object-left" priority />
@@ -51,4 +51,5 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     </div>
   );
 }
+
 

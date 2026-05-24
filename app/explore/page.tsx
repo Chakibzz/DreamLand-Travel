@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useCurrency } from "@/components/currency-context";
 import { AnnouncementModal } from "@/components/announcement-modal";
+import { AnnouncementImageBadge } from "@/components/announcement-image-badge";
 
 type PriceOption = { label: string; price: number | string };
 type RichDetails = {
@@ -14,6 +15,8 @@ type RichDetails = {
   included?: string[];
   excluded?: string[];
   alert?: string;
+  badge?: string;
+  images?: string[];
 };
 
 type Announcement = {
@@ -77,11 +80,11 @@ export default function ExplorePage() {
       </header>
 
       <section className="container-max mx-auto grid gap-6 px-4 py-6 scroll-reveal md:grid-cols-4 md:px-10">
-        <aside className="rounded-xl bg-[#12100c] p-4 shadow-sm md:col-span-1">
-          <h3 className="text-[30px] font-semibold text-[#c89a4b]">Filtrer</h3>
+        <aside className="rounded-xl bg-[#fff8ec] p-4 shadow-sm md:col-span-1">
+          <h3 className="text-[30px] font-semibold text-[#8a6025]">Filtrer</h3>
 
           <div className="mt-4">
-            <label className="text-[11px] font-bold text-[#9f8a66]">Destination</label>
+            <label className="text-[11px] font-bold text-[#7d6746]">Destination</label>
             <select className="mt-1 w-full rounded-md border border-[#5b4526] px-2 py-2 text-[12px]" value={location} onChange={(e) => setLocation(e.target.value)}>
               <option>Tous</option>
               {locations.map((item) => (
@@ -91,13 +94,13 @@ export default function ExplorePage() {
           </div>
 
           <div className="mt-4">
-            <label className="text-[11px] font-bold text-[#9f8a66]">Budget max (DZD): {maxBudgetDzd.toLocaleString("fr-DZ")}</label>
+            <label className="text-[11px] font-bold text-[#7d6746]">Budget max (DZD): {maxBudgetDzd.toLocaleString("fr-DZ")}</label>
             <input type="range" min={50000} max={900000} step={10000} value={maxBudgetDzd} onChange={(e) => setMaxBudgetDzd(Number(e.target.value))} className="mt-1 w-full" />
           </div>
 
           {tags.length > 0 ? (
-            <div className="mt-5 border-t border-[#3b2b16] pt-4">
-              <label className="text-[11px] font-bold text-[#9f8a66]">Avantages</label>
+            <div className="mt-5 border-t border-[#d8c29f] pt-4">
+              <label className="text-[11px] font-bold text-[#7d6746]">Avantages</label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {["Tous", ...tags].map((tag) => (
                   <button
@@ -105,7 +108,7 @@ export default function ExplorePage() {
                     type="button"
                     onClick={() => setSelectedTag(tag)}
                     className={`rounded-full border px-3 py-1 text-[11px] font-semibold ${
-                      selectedTag === tag ? "border-[#c89a4b] bg-[#c89a4b] text-[#12100c]" : "border-[#5b4526] text-[#d9c9ab]"
+                      selectedTag === tag ? "border-[#c89a4b] bg-[#c89a4b] text-[#12100c]" : "border-[#5b4526] text-[#5e4b31]"
                     }`}
                   >
                     {tag}
@@ -117,45 +120,46 @@ export default function ExplorePage() {
         </aside>
 
         <div className="md:col-span-3">
-          <div className="mb-4 flex items-center justify-between text-[12px] text-[#d9c9ab]">
+          <div className="mb-4 flex items-center justify-between text-[12px] text-[#5e4b31]">
             <span>{filteredAnnouncements.length} annonce(s) affichee(s)</span>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {filteredAnnouncements.map((item) => (
-              <article key={item.id} className="group overflow-hidden rounded-xl border border-[#3b2b16] bg-[#12100c] shadow-sm">
-                <div className="relative h-[190px]">
-                  <Image src={item.image} alt={item.title} fill sizes="(max-width:768px) 100vw, 50vw" className="object-cover image-hover" unoptimized />
+              <article key={item.id} className="group overflow-hidden rounded-xl border border-[#d8c29f] bg-[#fff8ec] shadow-sm">
+                <div className="relative h-[260px] bg-[#090909]">
+                  <Image src={item.image} alt={item.title} fill sizes="(max-width:768px) 100vw, 50vw" quality={100} className="object-contain" unoptimized />
+                  <AnnouncementImageBadge label={item.richDetails?.badge} />
                 </div>
                 <div className="p-4">
                   {item.tags?.length ? (
                     <div className="mb-2 flex flex-wrap gap-1.5">
                       {item.tags.slice(0, 4).map((tag) => (
-                        <span key={tag} className="rounded-full border border-[#5b4526] bg-[#090909] px-2 py-0.5 text-[10px] font-semibold text-[#c89a4b]">
+                        <span key={tag} className="rounded-full border border-[#5b4526] bg-[#1a130b] px-2 py-0.5 text-[10px] font-semibold text-[#c89a4b]">
                           {tag}
                         </span>
                       ))}
                     </div>
                   ) : null}
-                  <h3 className="text-[24px] font-semibold text-[#c89a4b]">{item.title}</h3>
-                  <p className="mt-1 line-clamp-2 text-[12px] text-[#d9c9ab]">{item.description}</p>
-                  <p className="mt-2 text-[11px] text-[#9f8a66]">{item.location}</p>
+                  <h3 className="text-[24px] font-semibold text-[#8a6025]">{item.title}</h3>
+                  <p className="mt-1 line-clamp-2 text-[12px] text-[#5e4b31]">{item.description}</p>
+                  <p className="mt-2 text-[11px] text-[#7d6746]">{item.location}</p>
                   {item.richDetails?.duration || item.richDetails?.dates?.length ? (
-                    <p className="mt-1 text-[11px] text-[#d9c9ab]">
+                    <p className="mt-1 text-[11px] text-[#5e4b31]">
                       {item.richDetails.duration ? item.richDetails.duration : null}
-                      {item.richDetails.duration && item.richDetails.dates?.length ? " · " : null}
+                      {item.richDetails.duration && item.richDetails.dates?.length ? " Ã‚Â· " : null}
                       {item.richDetails.dates?.length ? `${item.richDetails.dates.length} departs` : null}
                     </p>
                   ) : null}
-                  <p className="mt-2 text-[10px] text-[#9f8a66]">A PARTIR DE</p>
-                  <p className="text-[20px] font-bold text-[#c89a4b]">{formatPrice(Number(item.price))}</p>
-                  <button onClick={() => setSelectedAnnouncement(item)} className="mt-3 rounded-md border border-[#5f4722] px-3 py-1 text-[12px] font-semibold text-[#30507f] hover:bg-[#16110a]">
+                  <p className="mt-2 text-[10px] text-[#7d6746]">A PARTIR DE</p>
+                  <p className="text-[20px] font-bold text-[#8a6025]">{formatPrice(Number(item.price))}</p>
+                  <button onClick={() => setSelectedAnnouncement(item)} className="mt-3 rounded-md border border-[#5f4722] px-3 py-1 text-[12px] font-semibold text-[#30507f] hover:bg-[#f7eddd]">
                     Voir details
                   </button>
                 </div>
               </article>
             ))}
           </div>
-          {filteredAnnouncements.length === 0 ? <p className="mt-3 rounded-xl border border-[#3b2b16] bg-[#12100c] p-4 text-[13px] text-[#9f8a66]">Aucune annonce voyage organise n&apos;est publiee pour le moment.</p> : null}
+          {filteredAnnouncements.length === 0 ? <p className="mt-3 rounded-xl border border-[#d8c29f] bg-[#fff8ec] p-4 text-[13px] text-[#7d6746]">Aucune annonce voyage organise n&apos;est publiee pour le moment.</p> : null}
         </div>
       </section>
 

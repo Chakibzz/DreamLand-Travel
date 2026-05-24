@@ -51,13 +51,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="fr" className={`${montserrat.variable} ${beVietnam.variable}`}>
-      <body className="min-h-screen bg-[#090909] text-[#f2e4cc]">
+      <body className="min-h-screen bg-[#f4ead8] text-[#22180d]">
         <AuthSessionProvider>
           <CurrencyProvider>
             <ScrollAnimations />
             <StructuredData />
             <Navbar />
-            <main className="pt-20">{children}</main>
+            <main className="bg-[#f4ead8] pt-20 text-[#22180d]">{children}</main>
             <WhatsAppButton />
             <Footer />
           </CurrencyProvider>

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { FormEvent, useEffect, useState } from "react";
+import { AnnouncementImageBadge } from "@/components/announcement-image-badge";
 import { FormSuccessBadge } from "@/components/form-success-badge";
 
 type BookingService = "CUSTOM_TRIP" | "OMRA" | "TICKETING" | "TRANSFER";
@@ -12,6 +13,8 @@ type RichDetails = {
   duration?: string;
   airline?: string;
   dates?: string[];
+  images?: string[];
+  badge?: string;
   formulas?: RichFormula[];
   included?: string[];
   excluded?: string[];
@@ -40,6 +43,70 @@ type AnnouncementModalProps = {
   transferPreset?: TransferType;
 };
 
+const frenchMonths: Record<string, number> = {
+  janvier: 0,
+  fevrier: 1,
+  février: 1,
+  mars: 2,
+  avril: 3,
+  mai: 4,
+  juin: 5,
+  juillet: 6,
+  aout: 7,
+  août: 7,
+  septembre: 8,
+  octobre: 9,
+  novembre: 10,
+  decembre: 11,
+  décembre: 11,
+};
+
+function toInputDate(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function parseTravelDateRange(value: string) {
+  const normalized = value
+    .replace(/^du\s+/i, "")
+    .replace(/[→–—]/g, "-")
+    .replace(/\s+au\s+/gi, " - ")
+    .replace(/\s+à\s+/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const yearMatch = normalized.match(/(20\d{2})/g);
+  const fallbackYear = yearMatch ? Number(yearMatch[yearMatch.length - 1]) : new Date().getFullYear();
+  const compactSameMonth = normalized.match(/^(\d{1,2})\s*-\s*(\d{1,2})\s+([A-Za-zÀ-ÿ]+)\s+(20\d{2})$/);
+  if (compactSameMonth) {
+    const month = frenchMonths[compactSameMonth[3].toLowerCase()];
+    const year = Number(compactSameMonth[4]);
+    if (month !== undefined && Number.isFinite(year)) {
+      return {
+        start: toInputDate(new Date(Date.UTC(year, month, Number(compactSameMonth[1])))),
+        end: toInputDate(new Date(Date.UTC(year, month, Number(compactSameMonth[2])))),
+      };
+    }
+  }
+  const dateMatches = [...normalized.matchAll(/(\d{1,2})\s+([A-Za-zÀ-ÿ]+)(?:\s+(20\d{2}))?/g)];
+  if (dateMatches.length < 2) return null;
+
+  const buildDate = (match: RegExpMatchArray) => {
+    const day = Number(match[1]);
+    const monthKey = match[2].toLowerCase();
+    const month = frenchMonths[monthKey];
+    const year = Number(match[3] || fallbackYear);
+    if (!Number.isFinite(day) || month === undefined || !Number.isFinite(year)) return null;
+    return new Date(Date.UTC(year, month, day));
+  };
+
+  const start = buildDate(dateMatches[0]);
+  const end = buildDate(dateMatches[1]);
+  if (!start || !end) return null;
+  return {
+    start: toInputDate(start),
+    end: toInputDate(end),
+  };
+}
+
 export function AnnouncementModal({
   open,
   onClose,
@@ -63,6 +130,7 @@ export function AnnouncementModal({
     destination: "",
     departureDate: "",
     endDate: "",
+    selectedTravelDate: "",
     adults: 1,
     children: 0,
     childrenAges: "",
@@ -71,6 +139,7 @@ export function AnnouncementModal({
   });
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState<{ type: "idle" | "success" | "error"; message: string }>({ type: "idle", message: "" });
+  const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
     if (!open) return;
@@ -92,6 +161,8 @@ export function AnnouncementModal({
     : "Sur demande";
   const priceOptions = announcement.priceOptions ?? [];
   const richDetails = announcement.richDetails ?? {};
+  const galleryImages = Array.from(new Set([announcement.image, ...(richDetails.images ?? [])].filter(Boolean)));
+  const currentImage = galleryImages[Math.min(activeImage, galleryImages.length - 1)] || announcement.image;
   const richFormulas = richDetails.formulas ?? [];
   const hasRichDetails =
     Boolean(richDetails.duration) ||
@@ -104,6 +175,8 @@ export function AnnouncementModal({
     richFormulas.length > 0
       ? richFormulas.flatMap((formula) => (formula.tariffs ?? []).map((tariff) => ({ label: `${formula.name} - ${tariff.label}`, price: tariff.price })))
       : priceOptions;
+  const predefinedTravelDates = !showTransferFields && (serviceType === "CUSTOM_TRIP" || serviceType === "OMRA") ? (richDetails.dates ?? []).filter(Boolean) : [];
+  const selectedTravelDateRange = form.selectedTravelDate ? parseTravelDateRange(form.selectedTravelDate) : null;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -115,6 +188,8 @@ export function AnnouncementModal({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
+        departureDate: selectedTravelDateRange?.start || form.departureDate,
+        endDate: selectedTravelDateRange?.end || form.endDate,
         destination: showTransferFields
           ? currentTransferType === "AEROPORT_HOTEL"
             ? `Transfert aeroport-hotel (${form.city || "ville non precisee"})`
@@ -130,6 +205,7 @@ export function AnnouncementModal({
             showTransferFields && currentTransferType === "INTER_VILLES" && form.transferTo.trim() ? `Ville d'arrivee: ${form.transferTo.trim()}` : "",
             showTransferFields && currentTransferType === "BUSINESS" && form.companyName.trim() ? `Societe: ${form.companyName.trim()}` : "",
             showTransferFields && currentTransferType === "BUSINESS" && form.pickupAddress.trim() ? `Adresse de prise en charge: ${form.pickupAddress.trim()}` : "",
+            form.selectedTravelDate.trim() ? `Date choisie: ${form.selectedTravelDate.trim()}` : "",
             form.selectedPriceOption.trim() ? `Option tarifaire souhaitee: ${form.selectedPriceOption.trim()}` : "",
             form.children > 0 && form.childrenAges.trim() ? `Ages des enfants: ${form.childrenAges.trim()}` : "",
             form.notes,
@@ -163,6 +239,7 @@ export function AnnouncementModal({
       destination: "",
       departureDate: "",
       endDate: "",
+      selectedTravelDate: "",
       adults: 1,
       children: 0,
       childrenAges: "",
@@ -177,17 +254,34 @@ export function AnnouncementModal({
         className="mx-auto grid max-h-[95vh] w-full max-w-6xl overflow-hidden rounded-2xl border border-[#3b2b16] bg-[#12100c] shadow-[0_35px_90px_-35px_rgba(0,35,85,0.7)] md:grid-cols-2"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative min-h-[260px] md:min-h-[640px]">
-          <Image src={announcement.image} alt={announcement.title} fill className="object-cover" sizes="(max-width: 768px) 100vw, 50vw" unoptimized />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#06224d]/80 via-[#06224d]/20 to-transparent" />
-          <button onClick={onClose} className="absolute right-3 top-3 rounded-full bg-[#12100c]/95 px-3 py-1 text-[12px] font-semibold text-[#1b2a44] shadow-sm">
+        <div className="relative flex min-h-[360px] flex-col bg-[#090909] md:min-h-[640px]">
+          <div className="relative min-h-[260px] flex-1 bg-[#090909] md:min-h-[500px]">
+            <Image src={currentImage} alt={announcement.title} fill quality={100} className="object-contain" sizes="(max-width: 768px) 100vw, 50vw" unoptimized />
+            <AnnouncementImageBadge label={richDetails.badge} />
+          </div>
+          {galleryImages.length > 1 ? (
+            <div className="flex gap-2 overflow-x-auto border-t border-[#3b2b16] bg-[#090909] p-3">
+              {galleryImages.map((image, index) => (
+                <button
+                  key={image}
+                  type="button"
+                  onClick={() => setActiveImage(index)}
+                  className={`relative h-16 w-24 flex-none overflow-hidden rounded-md border ${activeImage === index ? "border-[#c89a4b]" : "border-[#3b2b16]"}`}
+                  aria-label={`Afficher l'image ${index + 1}`}
+                >
+                  <Image src={image} alt="" fill sizes="96px" className="object-contain" unoptimized />
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <button onClick={onClose} className="absolute right-3 top-3 rounded-full bg-[#f4ead8]/95 px-3 py-1 text-[12px] font-semibold text-[#1b2a44] shadow-sm">
             Fermer
           </button>
-          <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
-            <p className="text-[11px] uppercase tracking-widest text-white/80">{announcement.categoryName || "Offre"}</p>
+          <div className="border-t border-[#3b2b16] bg-[#12100c] p-5 text-white">
+            <p className="text-[11px] uppercase tracking-widest text-white/70">{announcement.categoryName || "Offre"}</p>
             <h3 className="mt-1 text-[34px] font-semibold leading-tight">{announcement.title}</h3>
             <p className="mt-1 text-[14px] text-white/90">{announcement.location || "Destination a confirmer"}</p>
-            <p className="mt-3 inline-flex rounded-full bg-[#12100c]/15 px-3 py-1 text-[13px] font-semibold">A partir de {displayPrice}</p>
+            <p className="mt-3 inline-flex rounded-full bg-[#a97b32] px-3 py-1 text-[13px] font-semibold">A partir de {displayPrice}</p>
           </div>
         </div>
 
@@ -379,16 +473,36 @@ export function AnnouncementModal({
                   ) : null}
                 </div>
               ) : null}
-              <div className="grid gap-3 sm:grid-cols-2">
+              {predefinedTravelDates.length > 0 ? (
                 <div>
-                  <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Date de depart (a partir de)</label>
-                  <input required type="date" value={form.departureDate} onChange={(e) => setForm((v) => ({ ...v, departureDate: e.target.value }))} className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]" />
+                  <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Date de depart disponible</label>
+                  <select
+                    required
+                    value={form.selectedTravelDate}
+                    onChange={(e) => setForm((v) => ({ ...v, selectedTravelDate: e.target.value }))}
+                    className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]"
+                  >
+                    <option value="">Choisir une date de depart</option>
+                    {predefinedTravelDates.map((date) => (
+                      <option key={date} value={date}>
+                        {date}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-[11px] text-[#9f8a66]">Les dates sont celles publiees par l&apos;agence pour cette annonce.</p>
                 </div>
-                <div>
-                  <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Date de retour / fin (jusqu&apos;a)</label>
-                  <input required type="date" value={form.endDate} onChange={(e) => setForm((v) => ({ ...v, endDate: e.target.value }))} className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]" />
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Date de depart (a partir de)</label>
+                    <input required type="date" value={form.departureDate} onChange={(e) => setForm((v) => ({ ...v, departureDate: e.target.value }))} className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]" />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Date de retour / fin (jusqu&apos;a)</label>
+                    <input required type="date" value={form.endDate} onChange={(e) => setForm((v) => ({ ...v, endDate: e.target.value }))} className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]" />
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-[12px] font-semibold text-[#d6c29a]">Nombre d&apos;adultes</label>

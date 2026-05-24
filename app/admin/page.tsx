@@ -59,11 +59,11 @@ export default async function AdminHomePage() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-[#3b2b16] bg-[#12100c] p-5 shadow-sm">
+      <div className="rounded-2xl border border-[#3b2b16] bg-[#12100c] p-5 shadow-[0_18px_45px_rgba(72,45,14,0.12)]">
         <h1 className="text-[34px] font-semibold text-[#c89a4b]">Accueil admin</h1>
         <p className="text-[13px] text-[#d9c9ab]">Retrouvez les actions importantes sans chercher dans les menus.</p>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
-          <Link href="/admin/requests" className="rounded-lg bg-[#c89a4b] px-4 py-3 text-center text-[13px] font-semibold text-white hover:bg-[#004b92]">
+          <Link href="/admin/requests" className="rounded-lg bg-[#c89a4b] px-4 py-3 text-center text-[13px] font-semibold text-[#12100c] hover:bg-[#e0b86b]">
             Voir les demandes clients
           </Link>
           <Link href="/admin/announcements" className="rounded-lg border border-[#5b4526] px-4 py-3 text-center text-[13px] font-semibold text-[#c89a4b] hover:bg-[#16110a]">

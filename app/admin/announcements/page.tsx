@@ -12,6 +12,8 @@ type RichDetails = {
   duration?: string;
   airline?: string;
   dates?: string[];
+  images?: string[];
+  badge?: string;
   formulas?: RichFormula[];
   included?: string[];
   excluded?: string[];
@@ -67,6 +69,7 @@ const initialForm = {
 };
 
 const suggestedTags = ["Hotel 5*", "All inclusive", "Aqua park", "Vol inclus", "Transfert inclus", "Famille", "Promo", "Depart Alger"];
+const suggestedImageBadges = ["Places limitees", "Dernieres places", "Complet", "Epuise", "Promo", "Nouveau", "Depart garanti"];
 
 const stepTitleClass = "text-[18px] font-semibold text-[#c89a4b]";
 const helpTextClass = "mt-1 text-[12px] leading-relaxed text-[#9f8a66]";
@@ -128,6 +131,8 @@ function cleanFacebookLine(line: string) {
   return line
     .replace(/^[\s*•\-]+/, "")
     .replace(/^[✅✈️🏨🗓️🔹💥🎟️🚌🐪❌🚨✨⭐️🇪🇬🇹🇷]+\s*/u, "")
+    .replace(/^[\p{Extended_Pictographic}\uFE0F\s]+/u, "")
+    .replace(/[\p{Extended_Pictographic}\uFE0F\s]+$/u, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -143,6 +148,45 @@ function uniqueValues(values: string[]) {
   return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
 }
 
+type FacebookParts = {
+  main: string;
+  dates: string;
+  hotels: string;
+  rooms: string;
+  included: string;
+};
+
+const initialFacebookParts: FacebookParts = {
+  main: "",
+  dates: "",
+  hotels: "",
+  rooms: "",
+  included: "",
+};
+
+function normalizeTariffLabel(value: string, childMode: boolean) {
+  const cleaned = value
+    .replace(/à partir de/i, "A partir de")
+    .replace(/a partir de/i, "A partir de")
+    .replace(/\(\s*SNGL\s*\)/i, "single")
+    .replace(/\(\s*DBL\s*\)/i, "double")
+    .replace(/\(\s*TRPL\s*\)/i, "triple")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (childMode && !/^enfant/i.test(cleaned)) return `Enfant ${cleaned}`;
+  return cleaned || "Tarif";
+}
+
+function addTariffsFromLine(formula: RichFormula, line: string, childMode: boolean) {
+  const parts = line.split("|").map((part) => part.trim()).filter(Boolean);
+  for (const part of parts) {
+    const price = parseDzdPrice(part);
+    if (price === null) continue;
+    const labelSource = part.replace(/[:：]?\s*\d[\d\s.]*\s*(DA|DZD).*/i, "").trim();
+    formula.tariffs.push({ label: normalizeTariffLabel(labelSource, childMode), price });
+  }
+}
+
 function parseFacebookAnnouncement(raw: string): {
   title: string;
   description: string;
@@ -152,13 +196,14 @@ function parseFacebookAnnouncement(raw: string): {
   priceOptions: PriceOption[];
   richDetails: RichDetails;
 } | null {
-  const lines = raw
+  const originalLines = raw
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
+  const lines = originalLines.map(cleanFacebookLine).filter(Boolean);
   if (lines.length === 0) return null;
 
-  const title = cleanFacebookLine(lines[0]).replace(/[\p{Extended_Pictographic}\uFE0F\s]+$/u, "").trim();
+  const title = cleanFacebookLine(lines[0]).trim();
   const introLines: string[] = [];
   const dates: string[] = [];
   const included: string[] = [];
@@ -169,8 +214,9 @@ function parseFacebookAnnouncement(raw: string): {
   let currentFormula: RichFormula | null = null;
   let childTariffMode = false;
 
-  for (const originalLine of lines.slice(1)) {
-    const line = cleanFacebookLine(originalLine);
+  for (let index = 1; index < lines.length; index += 1) {
+    const originalLine = originalLines[index] ?? lines[index];
+    const line = lines[index];
     const upper = line.toUpperCase();
     if (!line) continue;
 
@@ -179,12 +225,12 @@ function parseFacebookAnnouncement(raw: string): {
       continue;
     }
 
-    if (upper.includes("DATES DISPONIBLES") || upper.includes("DATES DU VOYAGE")) {
+    if (upper.includes("DATES DISPONIBLES") || upper.includes("DATES DU VOYAGE") || upper === "DATES" || upper.includes("DATES:")) {
       section = "dates";
       childTariffMode = false;
       continue;
     }
-    if (upper.includes("FORMULES") || upper.includes("TARIFS") || upper.includes("HÉBERGEMENTS") || upper.includes("HEBERGEMENTS")) {
+    if (upper.includes("FORMULES") || upper.includes("TARIFS") || upper.includes("HÉBERGEMENTS") || upper.includes("HEBERGEMENTS") || upper.includes("HOTELS") || upper.includes("HÔTELS")) {
       section = "formulas";
       childTariffMode = false;
       continue;
@@ -205,7 +251,17 @@ function parseFacebookAnnouncement(raw: string): {
       continue;
     }
 
-    const formulaMatch = line.match(/^Formule\s*\d+\s*:\s*(.+)$/i);
+    const looksLikeDate =
+      /^\d{1,2}\s+\p{L}+.*(?:→|->|-|au).*?\d{4}$/iu.test(line) ||
+      /^Du\s+/i.test(line) ||
+      /^\d{1,2}[/-]\d{1,2}.*(?:→|->|-|au)/i.test(line);
+    if (section === "dates" || looksLikeDate) {
+      if (looksLikeDate) dates.push(line.replace(/^Du\s+/i, "Du "));
+      else if (!upper.includes("HÉBERGEMENTS") && !upper.includes("HEBERGEMENTS")) dates.push(line);
+      continue;
+    }
+
+    const formulaMatch = line.match(/^(?:Formule\s*\d+\s*:?\s*)?(.+?(?:\d\s*(?:\*|★|⭐)|Resort|Hotel|Hôtel|Palace|Paradise|Medina|Lagoon|Holiday|Concorde|Pickalbatros).*)$/i);
     if (formulaMatch) {
       currentFormula = { name: formulaMatch[1].trim(), tariffs: [] };
       const hotelMatch = formulaMatch[1].match(/^(.+?)\s*\((.+)\)\s*$/);
@@ -215,29 +271,16 @@ function parseFacebookAnnouncement(raw: string): {
       continue;
     }
 
-    if (section === "dates") {
-      if (/^\d{1,2}\s+\p{L}+.*(?:→|->|-|au).*?\d{4}$/iu.test(line) || /^Du\s+/i.test(line)) {
-        dates.push(line.replace(/^Du\s+/i, "Du "));
-        continue;
-      }
-      if (!upper.includes("HÉBERGEMENTS") && !upper.includes("HEBERGEMENTS")) {
-        introLines.push(line);
-        continue;
-      }
-    }
-
-    if (section === "dates") {
-      dates.push(line.replace(/^Du\s+/i, "Du "));
-      continue;
-    }
-
-    if (section === "formulas") {
+    if (section === "formulas" || parseDzdPrice(line) !== null) {
       if (/^enfants?\s*:?\s*$/i.test(line)) {
         childTariffMode = true;
         continue;
       }
-
       const priceInLine = parseDzdPrice(line);
+      if (priceInLine === null && /comprend|par personne|au choix/i.test(line)) {
+        introLines.push(line);
+        continue;
+      }
       const looksLikeHotelTitle =
         priceInLine === null &&
         !/^enfants?\s*:?\s*$/i.test(line) &&
@@ -252,19 +295,11 @@ function parseFacebookAnnouncement(raw: string): {
         continue;
       }
 
-      if (!currentFormula) continue;
-      const parts = line.split("|").map((part) => part.trim()).filter(Boolean);
-      for (const part of parts) {
-        const price = parseDzdPrice(part);
-        if (price === null) continue;
-        const label = part
-          .replace(/:\s*\d[\d\s.]*\s*(DA|DZD).*/i, "")
-          .replace(/\(\s*SNGL\s*\)/i, "single")
-          .replace(/\(\s*DBL\s*\)/i, "double")
-          .replace(/\(\s*TRPL\s*\)/i, "triple")
-          .trim();
-        currentFormula.tariffs.push({ label: childTariffMode && !/^enfant/i.test(label) ? `Enfant ${label}` : label, price });
+      if (!currentFormula) {
+        currentFormula = { name: "Formule", tariffs: [] };
+        formulas.push(currentFormula);
       }
+      addTariffsFromLine(currentFormula, line, childTariffMode);
       continue;
     }
 
@@ -287,6 +322,7 @@ function parseFacebookAnnouncement(raw: string): {
   const minPrice = tariffsForStartingPrice.reduce<number | null>((min, tariff) => (min === null || tariff.price < min ? tariff.price : min), null);
   const titleLocation =
     title.match(/\b(?:à|a)\s+([^–-]+)/i)?.[1]?.trim() ||
+    title.match(/^(.+?)\s+avec\s+dreamland/i)?.[1]?.trim() ||
     (title.includes(":") ? title.split(":")[0].trim() : title.split("-")[0].trim());
   const description = introLines.slice(0, 3).join(" ").trim() || "Programme organise avec depart garanti, hebergement et assistance.";
   const tagCandidates = [
@@ -330,6 +366,7 @@ export default function AdminAnnouncementsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState("");
   const [facebookText, setFacebookText] = useState("");
+  const [facebookParts, setFacebookParts] = useState<FacebookParts>(initialFacebookParts);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -347,9 +384,27 @@ export default function AdminAnnouncementsPage() {
   const showAdvantagesAndPrices = adType === "VOYAGE" || adType === "OMRA" || adType === "SEJOUR";
 
   const importFacebookAnnouncement = () => {
-    const parsed = parseFacebookAnnouncement(facebookText);
+    const hotelLines = facebookParts.hotels.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const roomLines = facebookParts.rooms.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    const pairedHotelTariffs =
+      hotelLines.length > 0 &&
+      hotelLines.length === roomLines.length &&
+      roomLines.every((line) => parseDzdPrice(line) !== null && !/chambre|enfant|double|single|triple|individuelle/i.test(line));
+    const hotelAndRoomText = pairedHotelTariffs
+      ? hotelLines.map((hotel, index) => `${hotel}\n${roomLines[index]}`).join("\n")
+      : [facebookParts.hotels, facebookParts.rooms].filter((part) => part.trim()).join("\n");
+    const structuredText = [
+      facebookParts.main,
+      facebookParts.dates ? `Dates disponibles:\n${facebookParts.dates}` : "",
+      hotelAndRoomText ? `Hebergements et tarifs:\n${hotelAndRoomText}` : "",
+      facebookParts.included ? `Ce qui est inclus:\n${facebookParts.included}` : "",
+    ]
+      .filter((part) => part.trim())
+      .join("\n");
+    const textToParse = structuredText || facebookText;
+    const parsed = parseFacebookAnnouncement(textToParse);
     if (!parsed) {
-      setStatus("Collez d'abord le texte complet de l'annonce Facebook.");
+      setStatus("Collez d'abord le texte de l'annonce ou remplissez les blocs dates / hotels / tarifs.");
       return;
     }
     setForm((prev) => ({
@@ -495,14 +550,71 @@ export default function AdminAnnouncementsPage() {
     setDetails(initialDetails);
     setTagInput("");
     setFacebookText("");
+    setFacebookParts(initialFacebookParts);
     await loadData();
   };
 
-  const onDelete = async (id: string, imageUrl: string) => {
+  const addGalleryImages = async (files: FileList | File[]) => {
+    const selectedFiles = Array.from(files).filter((file) => file.type.startsWith("image/")).slice(0, 10);
+    if (selectedFiles.length === 0) return;
+    setUploadingImage(true);
+    setStatus("");
+    try {
+      const uploadedUrls: string[] = [];
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const response = await fetch("/api/upload", { method: "POST", body: formData });
+        const json = await response.json();
+        if (response.ok && json.success) {
+          uploadedUrls.push(json.data.url);
+          continue;
+        }
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(new Error("Lecture image impossible"));
+          reader.readAsDataURL(file);
+        });
+        uploadedUrls.push(dataUrl);
+      }
+
+      setForm((prev) => {
+        const currentImages = prev.richDetails.images ?? [];
+        const nextImages = Array.from(new Set([...currentImages, ...uploadedUrls])).slice(0, 12);
+        return {
+          ...prev,
+          image: prev.image || nextImages[0] || "",
+          richDetails: { ...prev.richDetails, images: nextImages },
+        };
+      });
+      setStatus(`${uploadedUrls.length} image(s) ajoutee(s) a la galerie.`);
+    } catch {
+      setStatus("Echec import galerie. Reessayez avec d'autres images.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeGalleryImage = (imageUrl: string) => {
+    setForm((prev) => {
+      const nextImages = (prev.richDetails.images ?? []).filter((image) => image !== imageUrl);
+      return {
+        ...prev,
+        image: prev.image === imageUrl ? nextImages[0] || "" : prev.image,
+        richDetails: { ...prev.richDetails, images: nextImages },
+      };
+    });
+  };
+
+  const onDelete = async (item: Announcement) => {
     if (!confirm("Supprimer cette annonce ?")) return;
-    await fetch(`/api/admin/announcements/${id}`, { method: "DELETE" });
-    if (imageUrl.startsWith("/uploads/")) {
-      await fetch(`/api/upload?url=${encodeURIComponent(imageUrl)}`, { method: "DELETE" });
+    await fetch(`/api/admin/announcements/${item.id}`, { method: "DELETE" });
+    const imagesToDelete = Array.from(new Set([item.image, ...(item.richDetails?.images ?? [])]));
+    for (const imageUrl of imagesToDelete) {
+      if (imageUrl.startsWith("/uploads/")) {
+        await fetch(`/api/upload?url=${encodeURIComponent(imageUrl)}`, { method: "DELETE" });
+      }
     }
     await loadData();
   };
@@ -548,15 +660,43 @@ export default function AdminAnnouncementsPage() {
         {showAdvantagesAndPrices ? (
           <div className="mt-4 grid gap-3 rounded-xl border border-[#3b2b16] bg-[#16110a] p-4">
             <div>
-              <h2 className={stepTitleClass}>2. Coller une annonce Facebook</h2>
-              <p className={helpTextClass}>Pour les longues annonces, collez le texte Facebook ici. Le site va extraire les dates, formules, tarifs, inclus et exclus.</p>
-              <textarea
-                value={facebookText}
-                onChange={(e) => setFacebookText(e.target.value)}
-                placeholder="Collez ici l'annonce Facebook complete..."
-                className="mt-3 w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]"
-                rows={6}
-              />
+              <h2 className={stepTitleClass}>2. Transformer une annonce Facebook</h2>
+              <p className={helpTextClass}>Le plus fiable: collez chaque partie dans son bloc. Si vous avez juste le texte complet, utilisez le premier champ.</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <textarea
+                  value={facebookParts.main}
+                  onChange={(e) => {
+                    setFacebookParts((v) => ({ ...v, main: e.target.value }));
+                    setFacebookText(e.target.value);
+                  }}
+                  placeholder="Texte principal: titre + description + points forts"
+                  className="min-h-32 rounded-md border border-[#5b4526] px-3 py-2 text-[13px]"
+                />
+                <textarea
+                  value={facebookParts.dates}
+                  onChange={(e) => setFacebookParts((v) => ({ ...v, dates: e.target.value }))}
+                  placeholder="Dates disponibles: une date par ligne"
+                  className="min-h-32 rounded-md border border-[#5b4526] px-3 py-2 text-[13px]"
+                />
+                <textarea
+                  value={facebookParts.hotels}
+                  onChange={(e) => setFacebookParts((v) => ({ ...v, hotels: e.target.value }))}
+                  placeholder="Hotels / formules: JOYA PARADISE 4*, Ozer Palace, Formule 1..."
+                  className="min-h-32 rounded-md border border-[#5b4526] px-3 py-2 text-[13px]"
+                />
+                <textarea
+                  value={facebookParts.rooms}
+                  onChange={(e) => setFacebookParts((v) => ({ ...v, rooms: e.target.value }))}
+                  placeholder="Chambres et prix: Chambre double : 219 000 DA"
+                  className="min-h-32 rounded-md border border-[#5b4526] px-3 py-2 text-[13px]"
+                />
+                <textarea
+                  value={facebookParts.included}
+                  onChange={(e) => setFacebookParts((v) => ({ ...v, included: e.target.value }))}
+                  placeholder="Inclus / exclus: billet, transferts, excursions, visa non inclus..."
+                  className="min-h-24 rounded-md border border-[#5b4526] px-3 py-2 text-[13px] md:col-span-2"
+                />
+              </div>
               <button type="button" onClick={importFacebookAnnouncement} className="mt-3 rounded-md bg-[#a97b32] px-4 py-2 text-[12px] font-bold text-white">
                 Transformer en annonce du site
               </button>
@@ -698,11 +838,35 @@ export default function AdminAnnouncementsPage() {
             <input value={form.image} readOnly placeholder="L'image apparaitra ici apres l'import" className="w-full rounded-md border border-[#5b4526] bg-[#16110a] px-3 py-2 text-[13px] text-[#9f8a66]" />
           </div>
           <div className="md:col-span-2">
+            <label className={labelClass}>Badge visible sur la photo</label>
+            <div className="grid gap-2 md:grid-cols-[220px_1fr]">
+              <select
+                value={form.richDetails.badge ?? ""}
+                onChange={(e) => setForm((v) => ({ ...v, richDetails: { ...v.richDetails, badge: e.target.value } }))}
+                className="rounded-md border border-[#5b4526] px-3 py-2 text-[13px]"
+              >
+                <option value="">Aucun badge</option>
+                {suggestedImageBadges.map((badge) => (
+                  <option key={badge} value={badge}>
+                    {badge}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={form.richDetails.badge ?? ""}
+                onChange={(e) => setForm((v) => ({ ...v, richDetails: { ...v.richDetails, badge: e.target.value } }))}
+                placeholder="Ou ecrire un badge personnalise"
+                className="rounded-md border border-[#5b4526] px-3 py-2 text-[13px]"
+              />
+            </div>
+            <p className="mt-1 text-[11px] text-[#9f8a66]">Exemples: Places limitees, Dernieres places, Complet, Epuise.</p>
+          </div>
+          <div className="md:col-span-2">
             <label className={labelClass}>Description visible par les clients</label>
             <textarea value={form.description} onChange={(e) => setForm((v) => ({ ...v, description: e.target.value }))} placeholder={adType === "GENERAL" ? "Expliquez l'offre en quelques phrases simples" : "Optionnel, sinon le site la cree avec les champs remplis"} className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[13px]" rows={3} required={adType === "GENERAL"} />
           </div>
           <div className="rounded-md border border-[#5b4526] px-3 py-2 text-[12px] md:col-span-2">
-            <label className="mb-2 block text-[12px] font-semibold text-[#d9c9ab]">Importer la photo de l&apos;annonce</label>
+            <label className="mb-2 block text-[12px] font-semibold text-[#d9c9ab]">Importer la photo principale</label>
             <input
               type="file"
               accept="image/*"
@@ -715,6 +879,31 @@ export default function AdminAnnouncementsPage() {
               {uploadingImage ? "Import de l'image en cours..." : form.image ? "Image prete pour publication." : "Choisissez une image depuis l'ordinateur."}
             </p>
           </div>
+          <div className="rounded-md border border-[#5b4526] px-3 py-2 text-[12px] md:col-span-2">
+            <label className="mb-2 block text-[12px] font-semibold text-[#d9c9ab]">Ajouter plusieurs images au detail</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={async (e) => {
+                if (e.target.files?.length) await addGalleryImages(e.target.files);
+              }}
+              className="w-full rounded-md border border-[#5b4526] px-3 py-2 text-[12px]"
+            />
+            <p className="mt-2 text-[11px] text-[#9f8a66]">Ces images apparaissent dans le menu “Voir details” sous forme de galerie deroulante.</p>
+            {form.richDetails.images?.length ? (
+              <div className="mt-3 flex gap-2 overflow-x-auto">
+                {form.richDetails.images.map((image) => (
+                  <div key={image} className="relative h-20 w-28 flex-none overflow-hidden rounded-md border border-[#3b2b16] bg-[#090909]">
+                    <Image src={image} alt="Image galerie" fill className="object-contain" sizes="112px" unoptimized />
+                    <button type="button" onClick={() => removeGalleryImage(image)} className="absolute right-1 top-1 rounded bg-[#12100c]/90 px-2 py-0.5 text-[10px] text-[#f4ead8]">
+                      Retirer
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {adType !== "GENERAL" ? (
@@ -726,8 +915,8 @@ export default function AdminAnnouncementsPage() {
         ) : null}
 
         {selectedImage ? (
-          <div className="relative mt-3 h-32 w-52 overflow-hidden rounded-lg">
-            <Image src={selectedImage} alt="preview" fill className="object-cover" sizes="208px" unoptimized />
+          <div className="relative mt-3 h-40 w-64 overflow-hidden rounded-lg bg-[#090909]">
+            <Image src={selectedImage} alt="preview" fill className="object-contain" sizes="256px" unoptimized />
           </div>
         ) : null}
         <div className="mt-4 flex gap-2">
@@ -743,6 +932,7 @@ export default function AdminAnnouncementsPage() {
                 setDetails(initialDetails);
                 setTagInput("");
                 setFacebookText("");
+                setFacebookParts(initialFacebookParts);
               }}
               className="rounded-md border border-[#5b4526] px-4 py-3 text-[12px]"
             >
@@ -776,7 +966,10 @@ export default function AdminAnnouncementsPage() {
                       description: item.description,
                       price: item.price,
                       tags: item.tags ?? [],
-                      richDetails: item.richDetails ?? {},
+                      richDetails: {
+                        ...(item.richDetails ?? {}),
+                        images: Array.from(new Set([item.image, ...((item.richDetails?.images ?? []) as string[])].filter(Boolean))),
+                      },
                       priceOptions:
                         item.priceOptions && item.priceOptions.length > 0
                           ? item.priceOptions.map((option) => ({ label: option.label, price: String(option.price) }))
@@ -790,7 +983,7 @@ export default function AdminAnnouncementsPage() {
                 >
                   Modifier cette annonce
                 </button>
-                <button onClick={() => onDelete(item.id, item.image)} className="rounded-md border border-[#d77] px-3 py-1 text-[12px] text-[#a33]">
+                <button onClick={() => onDelete(item)} className="rounded-md border border-[#d77] px-3 py-1 text-[12px] text-[#a33]">
                   Supprimer
                 </button>
               </div>

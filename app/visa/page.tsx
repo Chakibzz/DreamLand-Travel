@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { AnnouncementModal } from "@/components/announcement-modal";
 import { useCurrency } from "@/components/currency-context";
+import { AnnouncementImageBadge } from "@/components/announcement-image-badge";
 
 const visaOffers = [
   {
@@ -44,7 +45,7 @@ const visaTypes = [
 export default function VisaPage() {
   const { formatPrice } = useCurrency();
   const [announcements, setAnnouncements] = useState<
-    Array<{ id: string; title: string; price: string; image: string; description: string; location?: string; tags?: string[] }>
+    Array<{ id: string; title: string; price: string; image: string; description: string; location?: string; tags?: string[]; richDetails?: { images?: string[]; badge?: string } }>
   >([]);
   const [selectedVisa, setSelectedVisa] = useState<{
     title: string;
@@ -54,6 +55,7 @@ export default function VisaPage() {
     categoryName?: string;
     price?: string;
     tags?: string[];
+    richDetails?: { images?: string[]; badge?: string };
     highlights?: string[];
   } | null>(null);
 
@@ -98,8 +100,9 @@ export default function VisaPage() {
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               {announcements.map((item) => (
                 <article key={item.id} className="group overflow-hidden rounded-xl border border-[#3b2b16] bg-[#12100c] shadow-sm">
-                  <div className="relative h-[170px]">
-                    <Image src={item.image} alt={item.title} fill className="object-cover image-hover" quality={100} unoptimized />
+                  <div className="relative h-[230px] bg-[#090909]">
+                    <Image src={item.image} alt={item.title} fill sizes="(max-width:768px) 100vw, 33vw" className="object-contain" quality={100} unoptimized />
+                    <AnnouncementImageBadge label={item.richDetails?.badge} />
                   </div>
                   <div className="p-4">
                     <h3 className="text-[24px] font-semibold text-[#c89a4b]">{item.title}</h3>
@@ -115,6 +118,7 @@ export default function VisaPage() {
                           categoryName: "Services Visa",
                           price: item.price,
                           tags: item.tags,
+                          richDetails: item.richDetails,
                         })
                       }
                       className="mt-3 rounded-md border border-[#5f4722] px-3 py-1 text-[12px] font-semibold text-[#30507f] hover:bg-[#16110a]"

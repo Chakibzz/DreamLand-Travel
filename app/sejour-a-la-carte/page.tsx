@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ServiceBookingForm } from "@/components/service-booking-form";
 import { AnnouncementModal } from "@/components/announcement-modal";
 import { useCurrency } from "@/components/currency-context";
+import { AnnouncementImageBadge } from "@/components/announcement-image-badge";
 
 type PriceOption = { label: string; price: number | string };
 type Announcement = {
@@ -24,6 +25,8 @@ type Announcement = {
     included?: string[];
     excluded?: string[];
     alert?: string;
+    badge?: string;
+    images?: string[];
   };
 };
 
@@ -107,18 +110,18 @@ export default function SejourALaCartePage() {
 
       <section className="container-max mx-auto px-4 py-10 scroll-reveal md:px-10">
         <div className="mb-8 grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
-          <article className="rounded-2xl border border-[#3b2b16] bg-[#12100c] p-5 shadow-sm">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9f8a66]">Votre sejour a la carte</p>
-            <h2 className="mt-2 text-[36px] font-semibold leading-[42px] text-[#c89a4b]">Envie d&apos;evasion sans contraintes ?</h2>
-            <p className="mt-3 text-[14px] leading-relaxed text-[#d9c9ab]">
+          <article className="rounded-2xl border border-[#d8c29f] bg-[#fff8ec] p-5 shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#7d6746]">Votre sejour a la carte</p>
+            <h2 className="mt-2 text-[36px] font-semibold leading-[42px] text-[#8a6025]">Envie d&apos;evasion sans contraintes ?</h2>
+            <p className="mt-3 text-[14px] leading-relaxed text-[#5e4b31]">
               Que vous reviez des plages paradisiaques des Maldives ou de Bali, de l&apos;histoire fascinante de l&apos;Egypte, de la magie d&apos;Istanbul ou de la douceur de la Tunisie, tout est possible.
             </p>
-            <p className="mt-3 text-[14px] leading-relaxed text-[#d9c9ab]">
+            <p className="mt-3 text-[14px] leading-relaxed text-[#5e4b31]">
               Dreamland Travel cree votre sejour ideal et 100% sur mesure vers toutes les destinations de votre choix.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {destinationIdeas.map((destination) => (
-                <span key={destination} className="rounded-full border border-[#5b4526] bg-[#090909] px-3 py-1 text-[12px] font-semibold text-[#c89a4b]">
+                <span key={destination} className="rounded-full border border-[#5b4526] bg-[#1a130b] px-3 py-1 text-[12px] font-semibold text-[#c89a4b]">
                   {destination}
                 </span>
               ))}
@@ -127,19 +130,19 @@ export default function SejourALaCartePage() {
 
           <div className="grid gap-3">
             {customBenefits.map((benefit, index) => (
-              <div key={benefit} className="rounded-xl border border-[#3b2b16] bg-[#16110a] p-4">
-                <p className="text-[11px] font-bold text-[#9f8a66]">0{index + 1}</p>
-                <p className="mt-1 text-[15px] font-semibold text-[#d9c9ab]">{benefit}</p>
+              <div key={benefit} className="rounded-xl border border-[#d8c29f] bg-[#f7eddd] p-4">
+                <p className="text-[11px] font-bold text-[#7d6746]">0{index + 1}</p>
+                <p className="mt-1 text-[15px] font-semibold text-[#5e4b31]">{benefit}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mb-8 overflow-hidden rounded-2xl border border-[#3b2b16] bg-[#12100c] shadow-sm">
+        <div className="mb-8 overflow-hidden rounded-2xl border border-[#d8c29f] bg-[#fff8ec] shadow-sm">
           <div className="grid min-h-[420px] lg:grid-cols-[1.25fr_0.75fr]">
             <div className="relative min-h-[420px]">
               <Image src={customSlide.image} alt={customSlide.title} fill sizes="(max-width: 1024px) 100vw, 62vw" className="object-cover" quality={100} />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#090909]/80 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-[#12100c]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#090909]/80 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-transparent lg:to-[#fff8ec]" />
               <div className="absolute bottom-4 left-4 flex gap-2">
                 {customTripSlides.map((item, index) => (
                   <button
@@ -153,19 +156,19 @@ export default function SejourALaCartePage() {
               </div>
             </div>
             <div className="flex flex-col justify-center p-5 md:p-8">
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#9f8a66]">Inspirations a la carte</p>
-              <h2 className="mt-2 text-[38px] font-semibold leading-[44px] text-[#c89a4b]">{customSlide.title}</h2>
-              <p className="mt-3 text-[14px] leading-7 text-[#d9c9ab]">{customSlide.text}</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#7d6746]">Inspirations a la carte</p>
+              <h2 className="mt-2 text-[38px] font-semibold leading-[44px] text-[#8a6025]">{customSlide.title}</h2>
+              <p className="mt-3 text-[14px] leading-7 text-[#5e4b31]">{customSlide.text}</p>
               <div className="mt-5 flex flex-wrap gap-2">
-                <span className="rounded-full border border-[#5b4526] px-3 py-1 text-[12px] font-semibold text-[#d9c9ab]">Hotel selon criteres</span>
-                <span className="rounded-full border border-[#5b4526] px-3 py-1 text-[12px] font-semibold text-[#d9c9ab]">Vols adaptes</span>
-                <span className="rounded-full border border-[#5b4526] px-3 py-1 text-[12px] font-semibold text-[#d9c9ab]">Activites au choix</span>
+                <span className="rounded-full border border-[#5b4526] px-3 py-1 text-[12px] font-semibold text-[#5e4b31]">Hotel selon criteres</span>
+                <span className="rounded-full border border-[#5b4526] px-3 py-1 text-[12px] font-semibold text-[#5e4b31]">Vols adaptes</span>
+                <span className="rounded-full border border-[#5b4526] px-3 py-1 text-[12px] font-semibold text-[#5e4b31]">Activites au choix</span>
               </div>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link href="#formulaire-sejour" className="rounded-lg bg-[#c89a4b] px-5 py-3 text-[13px] font-bold text-white hover:bg-[#b88735]">
                   Construire ce sejour
                 </Link>
-                <button type="button" onClick={() => setActiveCustomSlide((activeCustomSlide + 1) % customTripSlides.length)} className="rounded-lg border border-[#5f4722] px-5 py-3 text-[13px] font-bold text-[#d9c9ab] hover:bg-[#16110a]">
+                <button type="button" onClick={() => setActiveCustomSlide((activeCustomSlide + 1) % customTripSlides.length)} className="rounded-lg border border-[#5f4722] px-5 py-3 text-[13px] font-bold text-[#5e4b31] hover:bg-[#f7eddd]">
                   Voir une autre idee
                 </button>
               </div>
@@ -175,24 +178,25 @@ export default function SejourALaCartePage() {
 
         <div className="grid gap-4 md:grid-cols-3">
           {announcements.map((item) => (
-            <article key={item.id} className="group overflow-hidden rounded-xl border border-[#3b2b16] bg-[#12100c] shadow-sm">
-              <div className="relative h-[170px]">
-                <Image src={item.image} alt={item.title} fill className="object-cover image-hover" quality={100} unoptimized />
+            <article key={item.id} className="group overflow-hidden rounded-xl border border-[#d8c29f] bg-[#fff8ec] shadow-sm">
+              <div className="relative h-[230px] bg-[#090909]">
+                <Image src={item.image} alt={item.title} fill sizes="(max-width:768px) 100vw, 33vw" className="object-contain" quality={100} unoptimized />
+                <AnnouncementImageBadge label={item.richDetails?.badge} />
               </div>
               <div className="p-4">
                 {item.tags?.length ? (
                   <div className="mb-2 flex flex-wrap gap-1.5">
                     {item.tags.slice(0, 3).map((tag) => (
-                      <span key={tag} className="rounded-full border border-[#5b4526] bg-[#090909] px-2 py-0.5 text-[10px] font-semibold text-[#c89a4b]">
+                      <span key={tag} className="rounded-full border border-[#5b4526] bg-[#1a130b] px-2 py-0.5 text-[10px] font-semibold text-[#c89a4b]">
                         {tag}
                       </span>
                     ))}
                   </div>
                 ) : null}
-                <h3 className="text-[24px] font-semibold text-[#c89a4b]">{item.title}</h3>
-                <p className="mt-1 text-[13px] font-semibold text-[#d9c9ab]">A partir de {formatPrice(Number(item.price))}</p>
-                <p className="mt-2 line-clamp-2 text-[12px] text-[#9f8a66]">{item.description}</p>
-                <button onClick={() => setSelectedAnnouncement(item)} className="mt-3 rounded-md border border-[#5f4722] px-3 py-1 text-[12px] font-semibold text-[#30507f] hover:bg-[#16110a]">
+                <h3 className="text-[24px] font-semibold text-[#8a6025]">{item.title}</h3>
+                <p className="mt-1 text-[13px] font-semibold text-[#5e4b31]">A partir de {formatPrice(Number(item.price))}</p>
+                <p className="mt-2 line-clamp-2 text-[12px] text-[#7d6746]">{item.description}</p>
+                <button onClick={() => setSelectedAnnouncement(item)} className="mt-3 rounded-md border border-[#5f4722] px-3 py-1 text-[12px] font-semibold text-[#30507f] hover:bg-[#f7eddd]">
                   Voir details
                 </button>
               </div>
@@ -200,7 +204,7 @@ export default function SejourALaCartePage() {
           ))}
         </div>
         {announcements.length === 0 ? (
-          <p className="rounded-xl border border-[#3b2b16] bg-[#12100c] p-4 text-[13px] text-[#9f8a66]">
+          <p className="rounded-xl border border-[#d8c29f] bg-[#fff8ec] p-4 text-[13px] text-[#7d6746]">
             Aucune offre fixe pour le moment. Utilisez le formulaire ci-dessous pour demander un sejour totalement personnalise.
           </p>
         ) : null}
