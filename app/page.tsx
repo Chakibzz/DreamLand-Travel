@@ -239,7 +239,7 @@ export default function HomePage() {
         <div className="container-max mx-auto grid items-center gap-10 px-4 md:grid-cols-2 md:px-10">
           <div className="group relative overflow-hidden rounded-2xl">
             <Image src="/upscaled/83a4543bcba0.jpg" alt="Voyageur" width={520} height={420} quality={100} className="w-full rounded-2xl image-hover" />
-            <div className="absolute bottom-[-18px] right-6 rounded-lg bg-[#a97b32] px-6 py-4 text-white">
+            <div className="absolute bottom-3 right-6 rounded-lg bg-[#a97b32] px-6 py-4 text-white">
               <p className="text-[30px] leading-none font-semibold">24/7</p>
               <p className="text-[10px] tracking-widest">ASSISTANCE CLIENT</p>
             </div>

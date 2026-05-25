@@ -33,7 +33,7 @@ export default function DetailsPage() {
           </div>
           <div className="scroll-reveal rounded-xl border border-[#3b2b16] bg-[#12100c] p-6">
             <h3 className="text-[32px] font-semibold text-[#c89a4b]">Ce qui est inclus</h3>
-            <p className="mt-3 text-[13px] text-[#d9c9ab]">Transferts 4x4 luxe Â· Camp premium Â· Repas gastronomiques Â· Guides locaux experts.</p>
+            <p className="mt-3 text-[13px] text-[#d9c9ab]">Transferts 4x4 luxe · Camp premium · Repas gastronomiques · Guides locaux experts.</p>
           </div>
         </div>
 

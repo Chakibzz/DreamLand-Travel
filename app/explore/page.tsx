@@ -32,6 +32,48 @@ type Announcement = {
   category?: { name: string };
 };
 
+function cleanText(value: string) {
+  return value
+    .replace(/Ãƒâ€šÃ‚Â·|Ã‚Â·|Â·/g, " · ")
+    .replace(/Ãƒâ€š|Ã‚|Â/g, "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function cleanStringArray(values?: string[]) {
+  return values?.map(cleanText).filter(Boolean) ?? [];
+}
+
+function cleanAnnouncement(item: Announcement): Announcement {
+  return {
+    ...item,
+    title: cleanText(item.title),
+    description: cleanText(item.description),
+    location: cleanText(item.location),
+    tags: cleanStringArray(item.tags),
+    priceOptions: item.priceOptions?.map((option) => ({ ...option, label: cleanText(option.label) })) ?? [],
+    richDetails: item.richDetails
+      ? {
+          ...item.richDetails,
+          duration: item.richDetails.duration ? cleanText(item.richDetails.duration) : undefined,
+          airline: item.richDetails.airline ? cleanText(item.richDetails.airline) : undefined,
+          dates: cleanStringArray(item.richDetails.dates),
+          included: cleanStringArray(item.richDetails.included),
+          excluded: cleanStringArray(item.richDetails.excluded),
+          alert: item.richDetails.alert ? cleanText(item.richDetails.alert) : undefined,
+          badge: item.richDetails.badge ? cleanText(item.richDetails.badge) : undefined,
+          formulas: item.richDetails.formulas?.map((formula) => ({
+            ...formula,
+            name: cleanText(formula.name),
+            hotel: formula.hotel ? cleanText(formula.hotel) : undefined,
+            tariffs: formula.tariffs?.map((tariff) => ({ ...tariff, label: cleanText(tariff.label) })),
+          })),
+        }
+      : undefined,
+  };
+}
+
 export default function ExplorePage() {
   const { formatPrice } = useCurrency();
   const [location, setLocation] = useState("Tous");
@@ -45,7 +87,7 @@ export default function ExplorePage() {
       const response = await fetch("/api/announcements?category=Voyages%20organises");
       const json = await response.json();
       if (response.ok && json.success) {
-        setAnnouncements(json.data ?? []);
+        setAnnouncements((json.data ?? []).map(cleanAnnouncement));
       }
     };
     void loadAnnouncements();
@@ -146,7 +188,7 @@ export default function ExplorePage() {
                   {item.richDetails?.duration || item.richDetails?.dates?.length ? (
                     <p className="mt-1 text-[11px] text-[#5e4b31]">
                       {item.richDetails.duration ? item.richDetails.duration : null}
-                      {item.richDetails.duration && item.richDetails.dates?.length ? " Ã‚Â· " : null}
+                      {item.richDetails.duration && item.richDetails.dates?.length ? " · " : null}
                       {item.richDetails.dates?.length ? `${item.richDetails.dates.length} departs` : null}
                     </p>
                   ) : null}
